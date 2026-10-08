@@ -1,0 +1,316 @@
+use crate::components::dialog::Dialog;
+use crate::components::kid_dialog::KidDialog;
+use crate::components::tabs::{Tabs, TabsContent, TabsList, TabsTrigger};
+use crate::credits::Credits;
+use crate::date::{header_date_label, today_str};
+use crate::icons::Icon;
+use crate::models::Kid;
+use crate::sections::calendar_board::CalendarBoard;
+use crate::sections::charts::Charts;
+use crate::sections::history::History;
+use crate::sections::today_tasks::TodayTasks;
+use crate::sections::wishes::Wishes;
+use chrono::Local;
+use leptos::prelude::*;
+
+const HEADER_BTN: &str = "flex items-center gap-1.5 rounded-full border-2 border-border bg-white px-3.5 py-2 font-display text-sm font-bold transition-all";
+const ALERT_CANCEL_CLASS: &str = "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all h-9 px-4 py-2 border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground rounded-full";
+
+#[component]
+pub fn App() -> impl IntoView {
+    let credits = Credits::new();
+    provide_context(credits);
+
+    let kid_dialog_open = RwSignal::new(false);
+    let editing_kid = RwSignal::new(None::<Kid>);
+    let deleting_kid = RwSignal::new(None::<Kid>);
+    let delete_open = RwSignal::new(false);
+    let import_error = RwSignal::new(None::<String>);
+    let import_success = RwSignal::new(None::<i64>);
+    let file_ref = NodeRef::<leptos::html::Input>::new();
+
+    let date_line = format!("{} · {}", today_str(), header_date_label(Local::now().date_naive()));
+
+    let kid_initial = Signal::derive(move || {
+        editing_kid.get().map(|k| (k.name.clone(), k.avatar.clone()))
+    });
+
+    let on_file = move |ev: leptos::ev::Event| {
+        let input: web_sys::HtmlInputElement = event_target(&ev);
+        let Some(files) = input.files() else { return };
+        let Some(file) = files.get(0) else { return };
+        leptos::task::spawn_local(async move {
+            let result = match crate::persist::read_file_text(&file).await {
+                Ok(text) => crate::store::parse_backup(&text).map_err(|e| e.message().to_string()),
+                Err(msg) => Err(msg),
+            };
+            match result {
+                Ok(new_store) => {
+                    let n = new_store.kids.len() as i64;
+                    credits.import_store(new_store);
+                    import_error.set(None);
+                    import_success.set(Some(n));
+                }
+                Err(msg) => {
+                    import_success.set(None);
+                    import_error.set(Some(msg));
+                }
+            }
+            if let Some(el) = file_ref.get() {
+                el.set_value("");
+            }
+        });
+    };
+
+    view! {
+        <div class="min-h-screen pb-16">
+            // decorative blobs
+            <div class="pointer-events-none fixed -left-24 -top-24 h-72 w-72 rounded-full bg-[#82eda6]/25 blur-3xl"></div>
+            <div class="pointer-events-none fixed -right-24 top-40 h-80 w-80 rounded-full bg-[#f6bbfd]/20 blur-3xl"></div>
+
+            <header class="relative mx-auto max-w-3xl px-4 pt-10">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="font-display text-sm font-bold tracking-widest text-[#9274b1]">{date_line}</div>
+                        <h1 class="font-display text-4xl font-extrabold tracking-tight">"宝贝积分站"</h1>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button
+                            class=format!("{HEADER_BTN} hover:border-[#4c87bf] hover:text-[#4c87bf]")
+                            title="导出全部数据为 JSON 文件"
+                            on:click=move |_| credits.store.with(|s| crate::persist::export_store(s))
+                        >
+                            <Icon name="download" class="h-4 w-4" /> " 导出"
+                        </button>
+                        <button
+                            class=format!("{HEADER_BTN} hover:border-[#1d5d3f] hover:text-[#1d5d3f]")
+                            title="从 JSON 文件恢复数据"
+                            on:click=move |_| {
+                                if let Some(el) = file_ref.get() {
+                                    el.click();
+                                }
+                            }
+                        >
+                            <Icon name="upload" class="h-4 w-4" /> " 导入"
+                        </button>
+                        <input
+                            node_ref=file_ref
+                            type="file"
+                            accept="application/json,.json"
+                            class="hidden"
+                            on:change=on_file
+                        />
+                        <span class="animate-float-coin text-5xl">"🪙"</span>
+                    </div>
+                </div>
+
+                {move || import_error.get().map(|msg| view! {
+                    <div class="mt-3 rounded-2xl border-2 border-[#872020]/30 bg-[#872020]/5 px-4 py-2.5 font-display text-sm font-bold text-[#872020]">
+                        "导入失败：" {msg} "，请确认是本应用导出的 JSON 备份文件"
+                    </div>
+                })}
+                {move || import_success.get().map(|n| view! {
+                    <div class="mt-3 rounded-2xl border-2 border-[#1d5d3f]/30 bg-[#1d5d3f]/5 px-4 py-2.5 font-display text-sm font-bold text-[#1d5d3f]">
+                        "导入成功！已恢复 " {n} " 个宝贝的全部配置和记录（原有数据已被替换）"
+                    </div>
+                })}
+
+                // kid switcher
+                <div class="mt-5 flex flex-wrap items-center gap-2">
+                    <For
+                        each=move || credits.kids.get()
+                        key=|k| k.id
+                        children=move |k: Kid| {
+                            let id = k.id;
+                            let name = k.name.clone();
+                            let avatar = k.avatar.clone();
+                            let k_edit = k.clone();
+                            let k_del = k.clone();
+                            view! {
+                                <div class="group relative">
+                                    <button
+                                        class=move || format!(
+                                            "flex items-center gap-2 rounded-full border-2 py-1.5 pl-2 pr-4 font-display font-bold transition-all {}",
+                                            if credits.selected_kid_id.get() == Some(id) {
+                                                "border-[#1d5d3f] bg-[#1d5d3f] text-white shadow-md"
+                                            } else {
+                                                "border-border bg-white hover:border-[#ecc22e]"
+                                            }
+                                        )
+                                        on:click=move |_| credits.selected_kid_id.set(Some(id))
+                                    >
+                                        <span class=move || format!(
+                                            "flex h-8 w-8 items-center justify-center rounded-full text-lg {}",
+                                            if credits.selected_kid_id.get() == Some(id) { "bg-white/15" } else { "bg-[#feffc9]" }
+                                        )>
+                                            {avatar.clone()}
+                                        </span>
+                                        {name.clone()}
+                                    </button>
+                                    {move || (credits.selected_kid_id.get() == Some(id)).then(|| {
+                                        let ke = k_edit.clone();
+                                        let kd = k_del.clone();
+                                        view! {
+                                            <div class="absolute -top-3 right-0 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                                                <button
+                                                    class="flex h-6 w-6 items-center justify-center rounded-full bg-white text-[#4c87bf] shadow hover:scale-110"
+                                                    aria-label="编辑宝贝"
+                                                    on:click=move |_| {
+                                                        editing_kid.set(Some(ke.clone()));
+                                                        kid_dialog_open.set(true);
+                                                    }
+                                                >
+                                                    <Icon name="pencil" class="h-3 w-3" />
+                                                </button>
+                                                <button
+                                                    class="flex h-6 w-6 items-center justify-center rounded-full bg-white text-[#872020] shadow hover:scale-110"
+                                                    aria-label="删除宝贝"
+                                                    on:click=move |_| {
+                                                        deleting_kid.set(Some(kd.clone()));
+                                                        delete_open.set(true);
+                                                    }
+                                                >
+                                                    <Icon name="trash-2" class="h-3 w-3" />
+                                                </button>
+                                            </div>
+                                        }
+                                    })}
+                                </div>
+                            }
+                        }
+                    />
+                    <button
+                        class="flex items-center gap-1 rounded-full border-2 border-dashed border-[#9274b1]/50 px-4 py-2 font-display font-bold text-[#9274b1] transition-all hover:border-[#9274b1] hover:bg-[#f3ecfa]"
+                        on:click=move |_| {
+                            editing_kid.set(None);
+                            kid_dialog_open.set(true);
+                        }
+                    >
+                        <Icon name="plus" class="h-4 w-4" /> " 添加宝贝"
+                    </button>
+                </div>
+
+                // balance hero
+                {move || credits.kid.get().map(|k| {
+                    let done_count = {
+                        let ts = credits.tasks.get();
+                        ts.iter().filter(|t| credits.is_task_done(t.id)).count()
+                    };
+                    let task_count = credits.tasks.get().len();
+                    view! {
+                        <div class="mt-6 overflow-hidden rounded-[2rem] bg-[#1d5d3f] p-6 text-white shadow-lg">
+                            <div class="flex flex-wrap items-end justify-between gap-4">
+                                <div>
+                                    <div class="font-display text-sm font-bold tracking-widest text-[#82eda6]">
+                                        {k.avatar} " " {k.name} " 的当前积分"
+                                    </div>
+                                    <div class="font-display text-6xl font-extrabold leading-none text-[#ecc22e]">
+                                        {credits.balance.get()}
+                                    </div>
+                                </div>
+                                <div class="flex gap-6">
+                                    <div>
+                                        <div class="text-xs text-white/70">"累计赚得"</div>
+                                        <div class="font-display text-2xl font-bold text-[#82eda6]">
+                                            "+" {credits.total_earned.get()}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs text-white/70">"累计花掉"</div>
+                                        <div class="font-display text-2xl font-bold text-[#f6bbfd]">
+                                            "−" {credits.total_spent.get()}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs text-white/70">"今日打卡"</div>
+                                        <div class="font-display text-2xl font-bold text-[#fdc068]">
+                                            {done_count} "/" {task_count}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                })}
+            </header>
+
+            <main class="relative mx-auto mt-8 max-w-3xl px-4">
+                {move || {
+                    if credits.kid.get().is_none() {
+                        view! {
+                            <div class="rounded-3xl border-2 border-dashed border-border bg-card/50 p-14 text-center">
+                                <div class="mb-3 text-5xl">"👋"</div>
+                                <p class="font-display text-lg font-bold">"先添加一个宝贝，开始攒积分吧！"</p>
+                            </div>
+                        }.into_any()
+                    } else {
+                        view! {
+                            <Tabs default_value="today">
+                                <TabsList class="grid h-auto w-full grid-cols-5 rounded-full bg-white p-1.5 shadow-sm">
+                                    <TabsTrigger value="today" class="rounded-full py-2 font-display font-bold" active_class="bg-[#1d5d3f] text-white">
+                                        <Icon name="calendar-check" class="mr-1.5 h-4 w-4" />"打卡
+                                    "</TabsTrigger>
+                                    <TabsTrigger value="wishes" class="rounded-full py-2 font-display font-bold" active_class="bg-[#9274b1] text-white">
+                                        <Icon name="gift" class="mr-1.5 h-4 w-4" />"心愿
+                                    "</TabsTrigger>
+                                    <TabsTrigger value="calendar" class="rounded-full py-2 font-display font-bold" active_class="bg-[#ecc22e] text-[#1d5d3f]">
+                                        <Icon name="calendar-days" class="mr-1.5 h-4 w-4" />"日历
+                                    "</TabsTrigger>
+                                    <TabsTrigger value="charts" class="rounded-full py-2 font-display font-bold" active_class="bg-[#f8622f] text-white">
+                                        <Icon name="bar-chart-3" class="mr-1.5 h-4 w-4" />"图表
+                                    "</TabsTrigger>
+                                    <TabsTrigger value="history" class="rounded-full py-2 font-display font-bold" active_class="bg-[#4c87bf] text-white">
+                                        <Icon name="scroll-text" class="mr-1.5 h-4 w-4" />"记录
+                                    "</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="today" class="mt-6"><TodayTasks /></TabsContent>
+                                <TabsContent value="wishes" class="mt-6"><Wishes /></TabsContent>
+                                <TabsContent value="calendar" class="mt-6"><CalendarBoard /></TabsContent>
+                                <TabsContent value="charts" class="mt-6"><Charts /></TabsContent>
+                                <TabsContent value="history" class="mt-6"><History /></TabsContent>
+                            </Tabs>
+                        }.into_any()
+                    }
+                }}
+            </main>
+
+            <KidDialog
+                open=kid_dialog_open
+                initial=kid_initial
+                on_save=move |(name, avatar): (String, String)| {
+                    match editing_kid.get_untracked() {
+                        Some(k) => credits.update_kid(k.id, &name, &avatar),
+                        None => credits.create_kid(&name, &avatar),
+                    }
+                }
+            />
+
+            <Dialog open=delete_open show_close=false content_class="rounded-3xl">
+                <div class="flex flex-col gap-2 text-center sm:text-left">
+                    <h2 class="text-lg font-semibold font-display text-xl">
+                        "删除「" {move || deleting_kid.get().map(|k| k.name).unwrap_or_default()} "」？"
+                    </h2>
+                    <p class="text-muted-foreground text-sm">
+                        "将同时删除该宝贝的所有任务、心愿和积分记录，此操作不可恢复。"
+                    </p>
+                </div>
+                <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                    <button class=ALERT_CANCEL_CLASS on:click=move |_| delete_open.set(false)>
+                        取消
+                    </button>
+                    <button
+                        class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all h-9 px-4 py-2 rounded-full bg-[#872020] text-white hover:bg-[#6d1a1a]"
+                        on:click=move |_| {
+                            if let Some(k) = deleting_kid.get() {
+                                credits.delete_kid(k.id);
+                            }
+                            delete_open.set(false);
+                        }
+                    >
+                        确定删除
+                    </button>
+                </div>
+            </Dialog>
+        </div>
+    }
+}
