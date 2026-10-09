@@ -2,7 +2,7 @@ use crate::components::dialog::Dialog;
 use crate::components::kid_dialog::KidDialog;
 use crate::components::tabs::{Tabs, TabsContent, TabsList, TabsTrigger};
 use crate::credits::Credits;
-use crate::date::{header_date_label, today_str};
+use crate::i18n::{delete_kid_title, import_error_msg, import_success_msg, initial_lang, t, K};
 use crate::icons::Icon;
 use crate::models::Kid;
 use crate::sections::calendar_board::CalendarBoard;
@@ -10,6 +10,7 @@ use crate::sections::charts::Charts;
 use crate::sections::history::History;
 use crate::sections::today_tasks::TodayTasks;
 use crate::sections::wishes::Wishes;
+use crate::store::BackupError;
 use chrono::Local;
 use leptos::prelude::*;
 
@@ -20,6 +21,19 @@ const ALERT_CANCEL_CLASS: &str = "m3-btn-outlined";
 pub fn App() -> impl IntoView {
     let credits = Credits::new();
     provide_context(credits);
+
+    let lang = RwSignal::new(initial_lang());
+    provide_context(lang);
+    Effect::new(move |_| {
+        let l = lang.get();
+        if let Some(el) = document().document_element() {
+            let _ = el.set_attribute("lang", l.as_str());
+        }
+        document().set_title(t(l, K::AppTitle));
+        if let Some(storage) = window().local_storage().ok().flatten() {
+            let _ = storage.set_item("lang", l.as_str());
+        }
+    });
 
     let kid_dialog_open = RwSignal::new(false);
     let editing_kid = RwSignal::new(None::<Kid>);
@@ -50,8 +64,6 @@ pub fn App() -> impl IntoView {
         }
     });
 
-    let date_line = format!("{} · {}", today_str(), header_date_label(Local::now().date_naive()));
-
     let kid_initial = Signal::derive(move || {
         editing_kid.get().map(|k| (k.name.clone(), k.avatar.clone()))
     });
@@ -62,7 +74,11 @@ pub fn App() -> impl IntoView {
         let Some(file) = files.get(0) else { return };
         leptos::task::spawn_local(async move {
             let result = match crate::persist::read_file_text(&file).await {
-                Ok(text) => crate::store::parse_backup(&text).map_err(|e| e.message().to_string()),
+                Ok(text) => crate::store::parse_backup(&text).map_err(|e| match e {
+                    BackupError::BadFormat => t(lang.get_untracked(), K::ErrBadFormat).to_string(),
+                    BackupError::BadKids => t(lang.get_untracked(), K::ErrBadKids).to_string(),
+                    BackupError::BadRecords => t(lang.get_untracked(), K::ErrBadRecords).to_string(),
+                }),
                 Err(msg) => Err(msg),
             };
             match result {
@@ -92,13 +108,20 @@ pub fn App() -> impl IntoView {
             <header class="relative mx-auto max-w-3xl px-4 pt-10">
                 <div class="flex items-center justify-between">
                     <div>
-                        <div class="font-display text-sm font-bold tracking-widest text-on-surface-variant">{date_line}</div>
-                        <h1 class="font-display text-4xl font-extrabold tracking-tight">"宝贝积分站"</h1>
+                        <div class="font-display text-sm font-bold tracking-widest text-on-surface-variant">{move || crate::date::header_date_line(lang.get(), Local::now().date_naive())}</div>
+                        <h1 class="font-display text-4xl font-extrabold tracking-tight">{move || t(lang.get(), K::AppTitle)}</h1>
                     </div>
                     <div class="flex items-center gap-2">
                         <button
+                            class="m3-icon-btn w-auto px-2.5 font-display text-sm font-bold"
+                            title="Switch language / 切换语言"
+                            on:click=move |_| lang.update(|l| *l = l.toggle())
+                        >
+                            {move || lang.get().label()}
+                        </button>
+                        <button
                             class="m3-icon-btn"
-                            title="切换深色模式"
+                            title=move || t(lang.get(), K::ToggleDark)
                             on:click=move |_| dark_mode.update(|v| *v = !*v)
                         >
                             {move || if dark_mode.get() {
@@ -109,21 +132,21 @@ pub fn App() -> impl IntoView {
                         </button>
                         <button
                             class=HEADER_BTN
-                            title="导出全部数据为 JSON 文件"
+                            title=move || t(lang.get(), K::ExportTitle)
                             on:click=move |_| credits.store.with(|s| crate::persist::export_store(s))
                         >
-                            <Icon name="download" class="h-4 w-4" /> " 导出"
+                            <Icon name="download" class="h-4 w-4" /> " " {move || t(lang.get(), K::Export)}
                         </button>
                         <button
                             class=HEADER_BTN
-                            title="从 JSON 文件恢复数据"
+                            title=move || t(lang.get(), K::ImportTitle)
                             on:click=move |_| {
                                 if let Some(el) = file_ref.get() {
                                     el.click();
                                 }
                             }
                         >
-                            <Icon name="upload" class="h-4 w-4" /> " 导入"
+                            <Icon name="upload" class="h-4 w-4" /> " " {move || t(lang.get(), K::Import)}
                         </button>
                         <input
                             node_ref=file_ref
@@ -138,12 +161,12 @@ pub fn App() -> impl IntoView {
 
                 {move || import_error.get().map(|msg| view! {
                     <div class="mt-3 rounded-2xl bg-error-container px-4 py-2.5 font-display text-sm font-bold text-on-error-container">
-                        "导入失败：" {msg} "，请确认是本应用导出的 JSON 备份文件"
+                        {import_error_msg(lang.get(), &msg)}
                     </div>
                 })}
                 {move || import_success.get().map(|n| view! {
                     <div class="mt-3 rounded-2xl bg-earn-container px-4 py-2.5 font-display text-sm font-bold text-on-earn-container">
-                        "导入成功！已恢复 " {n} " 个宝贝的全部配置和记录（原有数据已被替换）"
+                        {import_success_msg(lang.get(), n)}
                     </div>
                 })}
 
@@ -186,7 +209,7 @@ pub fn App() -> impl IntoView {
                                             <div class="absolute -top-3 right-0 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                                                 <button
                                                     class="flex h-6 w-6 items-center justify-center rounded-full bg-surface-container-lowest text-primary shadow-elevation-1 hover:scale-110"
-                                                    aria-label="编辑宝贝"
+                                                    aria-label=move || t(lang.get(), K::EditKid)
                                                     on:click=move |_| {
                                                         editing_kid.set(Some(ke.clone()));
                                                         kid_dialog_open.set(true);
@@ -196,7 +219,7 @@ pub fn App() -> impl IntoView {
                                                 </button>
                                                 <button
                                                     class="flex h-6 w-6 items-center justify-center rounded-full bg-surface-container-lowest text-error shadow-elevation-1 hover:scale-110"
-                                                    aria-label="删除宝贝"
+                                                    aria-label=move || t(lang.get(), K::DeleteKid)
                                                     on:click=move |_| {
                                                         deleting_kid.set(Some(kd.clone()));
                                                         delete_open.set(true);
@@ -218,7 +241,7 @@ pub fn App() -> impl IntoView {
                             kid_dialog_open.set(true);
                         }
                     >
-                        <Icon name="plus" class="h-4 w-4" /> " 添加宝贝"
+                        <Icon name="plus" class="h-4 w-4" /> " " {move || t(lang.get(), K::AddKid)}
                     </button>
                 </div>
 
@@ -234,7 +257,7 @@ pub fn App() -> impl IntoView {
                             <div class="flex flex-wrap items-end justify-between gap-4">
                                 <div>
                                     <div class="font-display text-sm font-bold tracking-widest text-on-primary/80">
-                                        {k.avatar} " " {k.name} " 的当前积分"
+                                        {k.avatar} " " {k.name} {move || t(lang.get(), K::HeroCreditsSuffix)}
                                     </div>
                                     <div class="font-display text-6xl font-extrabold leading-none text-on-primary">
                                         {credits.balance.get()}
@@ -242,19 +265,19 @@ pub fn App() -> impl IntoView {
                                 </div>
                                 <div class="flex gap-6">
                                     <div>
-                                        <div class="text-xs text-on-primary/70">"累计赚得"</div>
+                                        <div class="text-xs text-on-primary/70">{move || t(lang.get(), K::TotalEarned)}</div>
                                         <div class="font-display text-2xl font-bold text-on-primary">
                                             "+" {credits.total_earned.get()}
                                         </div>
                                     </div>
                                     <div>
-                                        <div class="text-xs text-on-primary/70">"累计花掉"</div>
+                                        <div class="text-xs text-on-primary/70">{move || t(lang.get(), K::TotalSpent)}</div>
                                         <div class="font-display text-2xl font-bold text-on-primary">
                                             "−" {credits.total_spent.get()}
                                         </div>
                                     </div>
                                     <div>
-                                        <div class="text-xs text-on-primary/70">"今日打卡"</div>
+                                        <div class="text-xs text-on-primary/70">{move || t(lang.get(), K::HeroToday)}</div>
                                         <div class="font-display text-2xl font-bold text-on-primary">
                                             {done_count} "/" {task_count}
                                         </div>
@@ -272,7 +295,7 @@ pub fn App() -> impl IntoView {
                         view! {
                             <div class="rounded-3xl border-2 border-dashed border-outline-variant bg-surface-container-low/50 p-14 text-center text-on-surface-variant">
                                 <div class="mb-3 text-5xl">"👋"</div>
-                                <p class="font-display text-lg font-bold">"先添加一个宝贝，开始攒积分吧！"</p>
+                                <p class="font-display text-lg font-bold">{move || t(lang.get(), K::EmptyWelcome)}</p>
                             </div>
                         }.into_any()
                     } else {
@@ -280,20 +303,20 @@ pub fn App() -> impl IntoView {
                             <Tabs default_value="today">
                                 <TabsList class="grid h-auto w-full grid-cols-5 rounded-full bg-surface-container-low p-1.5">
                                     <TabsTrigger value="today" class="rounded-full py-2 font-display font-bold" active_class="bg-primary text-on-primary shadow-elevation-1">
-                                        <Icon name="calendar-check" class="mr-1.5 h-4 w-4" />"打卡
-                                    "</TabsTrigger>
+                                        <Icon name="calendar-check" class="mr-1.5 h-4 w-4" />{move || t(lang.get(), K::TabCheckin)}
+                                    </TabsTrigger>
                                     <TabsTrigger value="wishes" class="rounded-full py-2 font-display font-bold" active_class="bg-primary text-on-primary shadow-elevation-1">
-                                        <Icon name="gift" class="mr-1.5 h-4 w-4" />"心愿
-                                    "</TabsTrigger>
+                                        <Icon name="gift" class="mr-1.5 h-4 w-4" />{move || t(lang.get(), K::TabWishes)}
+                                    </TabsTrigger>
                                     <TabsTrigger value="calendar" class="rounded-full py-2 font-display font-bold" active_class="bg-primary text-on-primary shadow-elevation-1">
-                                        <Icon name="calendar-days" class="mr-1.5 h-4 w-4" />"日历
-                                    "</TabsTrigger>
+                                        <Icon name="calendar-days" class="mr-1.5 h-4 w-4" />{move || t(lang.get(), K::TabCalendar)}
+                                    </TabsTrigger>
                                     <TabsTrigger value="charts" class="rounded-full py-2 font-display font-bold" active_class="bg-primary text-on-primary shadow-elevation-1">
-                                        <Icon name="bar-chart-3" class="mr-1.5 h-4 w-4" />"图表
-                                    "</TabsTrigger>
+                                        <Icon name="bar-chart-3" class="mr-1.5 h-4 w-4" />{move || t(lang.get(), K::TabCharts)}
+                                    </TabsTrigger>
                                     <TabsTrigger value="history" class="rounded-full py-2 font-display font-bold" active_class="bg-primary text-on-primary shadow-elevation-1">
-                                        <Icon name="scroll-text" class="mr-1.5 h-4 w-4" />"记录
-                                    "</TabsTrigger>
+                                        <Icon name="scroll-text" class="mr-1.5 h-4 w-4" />{move || t(lang.get(), K::TabHistory)}
+                                    </TabsTrigger>
                                 </TabsList>
                                 <TabsContent value="today" class="mt-6"><TodayTasks /></TabsContent>
                                 <TabsContent value="wishes" class="mt-6"><Wishes /></TabsContent>
@@ -320,15 +343,15 @@ pub fn App() -> impl IntoView {
             <Dialog open=delete_open show_close=false>
                 <div class="flex flex-col gap-2 text-center sm:text-left">
                     <h2 class="text-lg font-semibold font-display text-xl">
-                        "删除「" {move || deleting_kid.get().map(|k| k.name).unwrap_or_default()} "」？"
+                        {move || delete_kid_title(lang.get(), &deleting_kid.get().map(|k| k.name).unwrap_or_default())}
                     </h2>
                     <p class="text-on-surface-variant text-sm">
-                        "将同时删除该宝贝的所有任务、心愿和积分记录，此操作不可恢复。"
+                        {move || t(lang.get(), K::DeleteKidBody)}
                     </p>
                 </div>
                 <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                     <button class=ALERT_CANCEL_CLASS on:click=move |_| delete_open.set(false)>
-                        取消
+                        {move || t(lang.get(), K::Cancel)}
                     </button>
                     <button
                         class="m3-btn-danger"
@@ -339,7 +362,7 @@ pub fn App() -> impl IntoView {
                             delete_open.set(false);
                         }
                     >
-                        确定删除
+                        {move || t(lang.get(), K::ConfirmDelete)}
                     </button>
                 </div>
             </Dialog>

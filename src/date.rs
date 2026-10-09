@@ -40,12 +40,6 @@ pub fn month_cells(year: i32, month: u32) -> Vec<Option<u32>> {
 
 pub const WEEKDAYS_CN: [&str; 7] = ["一", "二", "三", "四", "五", "六", "日"];
 
-/// 对应原版 dateLabel："10月8日 星期四"
-pub fn header_date_label(d: NaiveDate) -> String {
-    let week = WEEKDAYS_CN[d.weekday().num_days_from_monday() as usize];
-    format!("{}月{}日 星期{}", d.month(), d.day(), week)
-}
-
 /// "10/2"
 pub fn date_label_md(d: NaiveDate) -> String {
     format!("{}/{}", d.month(), d.day())
@@ -136,12 +130,6 @@ mod tests {
     fn month_cells_december_rolls_year() {
         let cells = month_cells(2026, 12);
         assert_eq!(cells.iter().flatten().count(), 31);
-    }
-
-    #[test]
-    fn header_label_has_weekday() {
-        // 2026-10-08 是周四
-        assert_eq!(header_date_label(d("2026-10-08")), "10月8日 星期四");
     }
 
     #[test]
