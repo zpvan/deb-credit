@@ -54,12 +54,12 @@ pub fn CalendarBoard() -> impl IntoView {
 
     view! {
         <section class="space-y-6">
-            <div class="rounded-3xl border-2 border-border bg-card p-5">
+            <div class="m3-card p-5">
                 <div class="mb-4 flex items-center justify-between">
                     <h2 class="font-display text-2xl font-bold">"日历看板"</h2>
                     <div class="flex items-center gap-1">
                         <button
-                            class="flex h-9 w-9 items-center justify-center rounded-full hover:bg-[#feffc9]"
+                            class="m3-icon-btn h-9 w-9"
                             aria-label="上个月"
                             on:click=move |_| {
                                 if view_month.get() == 1 {
@@ -76,7 +76,7 @@ pub fn CalendarBoard() -> impl IntoView {
                             {move || format!("{}年{}月", view_year.get(), view_month.get())}
                         </span>
                         <button
-                            class="flex h-9 w-9 items-center justify-center rounded-full hover:bg-[#feffc9]"
+                            class="m3-icon-btn h-9 w-9"
                             aria-label="下个月"
                             on:click=move |_| {
                                 if view_month.get() == 12 {
@@ -92,7 +92,7 @@ pub fn CalendarBoard() -> impl IntoView {
                     </div>
                 </div>
 
-                <div class="mb-1 grid grid-cols-7 text-center text-xs font-bold text-muted-foreground">
+                <div class="mb-1 grid grid-cols-7 text-center text-xs font-bold text-on-surface-variant">
                     {WEEKDAYS_CN
                         .iter()
                         .map(|w| view! { <div class="py-1">{*w}</div> })
@@ -126,28 +126,28 @@ pub fn CalendarBoard() -> impl IntoView {
                                 let intensity = s.map(|s| (s.earned as f64 / max_earn as f64).min(1.0)).unwrap_or(0.0);
                                 let has_earned = s.map(|s| s.earned > 0).unwrap_or(false);
                                 let cls = format!(
-                                    "relative flex min-h-[64px] flex-col items-center justify-start rounded-2xl border-2 px-1 py-1.5 transition-all sm:min-h-[76px] {}",
+                                    "relative flex min-h-[64px] flex-col items-center justify-start rounded-2xl px-1 py-1.5 transition-all sm:min-h-[76px] {}",
                                     if is_selected {
-                                        "border-[#1d5d3f] bg-[#1d5d3f] text-white shadow"
+                                        "bg-primary text-on-primary shadow-elevation-1"
                                     } else if has_earned {
-                                        "border-transparent"
+                                        ""
                                     } else {
-                                        "border-transparent bg-muted/40 hover:bg-muted"
+                                        "bg-surface-container-low hover:bg-surface-container-high"
                                     }
                                 );
                                 let style = if !is_selected && has_earned {
-                                    format!("background-color: rgba(29, 93, 63, {})", 0.08 + intensity * 0.25)
+                                    format!("background-color: rgb(var(--earn) / {:.2})", 0.10 + intensity * 0.25)
                                 } else {
                                     String::new()
                                 };
                                 let num_cls = format!(
                                     "font-display text-sm font-bold leading-none {}",
                                     if is_selected {
-                                        "text-white"
+                                        "text-on-primary"
                                     } else if is_today {
-                                        "text-[#f8622f]"
+                                        "text-primary"
                                     } else if is_future {
-                                        "text-muted-foreground/50"
+                                        "text-on-surface-variant/50"
                                     } else {
                                         ""
                                     }
@@ -158,14 +158,14 @@ pub fn CalendarBoard() -> impl IntoView {
                                     <button class=cls style=style on:click=move |_| selected.set(ds_click.clone())>
                                         <span class=num_cls>{day}</span>
                                         {(is_today && !is_selected).then(|| view! {
-                                            <span class="mt-0.5 h-1 w-1 rounded-full bg-[#f8622f]"></span>
+                                            <span class="mt-0.5 h-1 w-1 rounded-full bg-primary"></span>
                                         })}
                                         {s.map(|s| view! {
                                             <div class="mt-1 flex flex-col items-center gap-0.5">
                                                 {(s.earned > 0).then(|| view! {
                                                     <span class=format!(
                                                         "font-display text-[11px] font-extrabold leading-none {}",
-                                                        if is_selected { "text-[#ecc22e]" } else { "text-[#1d5d3f]" }
+                                                        if is_selected { "text-on-primary" } else { "text-earn" }
                                                     )>
                                                         "+" {s.earned}
                                                     </span>
@@ -173,7 +173,7 @@ pub fn CalendarBoard() -> impl IntoView {
                                                 {(s.spent > 0).then(|| view! {
                                                     <span class=format!(
                                                         "font-display text-[11px] font-extrabold leading-none {}",
-                                                        if is_selected { "text-[#f6bbfd]" } else { "text-[#f8622f]" }
+                                                        if is_selected { "text-on-primary/80" } else { "text-primary" }
                                                     )>
                                                         "−" {s.spent}
                                                     </span>
@@ -182,11 +182,11 @@ pub fn CalendarBoard() -> impl IntoView {
                                                     <span class=format!(
                                                         "mt-0.5 rounded-full px-1.5 text-[10px] font-bold leading-4 {}",
                                                         if s.checks >= task_count {
-                                                            if is_selected { "bg-[#ecc22e] text-[#1d5d3f]" } else { "bg-[#ecc22e]/70 text-[#1d5d3f]" }
+                                                            if is_selected { "bg-on-primary text-primary" } else { "bg-earn text-on-earn" }
                                                         } else if is_selected {
-                                                            "bg-white/20 text-white/90"
+                                                            "bg-on-primary/20 text-on-primary"
                                                         } else {
-                                                            "bg-muted-foreground/15 text-muted-foreground"
+                                                            "bg-surface-container-highest text-on-surface-variant"
                                                         }
                                                     )>
                                                         {if s.checks >= task_count { "全勤".to_string() } else { format!("{}项", s.checks) }}
@@ -202,17 +202,17 @@ pub fn CalendarBoard() -> impl IntoView {
                     }}
                 </div>
 
-                <div class="mt-4 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                <div class="mt-4 flex flex-wrap items-center gap-4 text-xs text-on-surface-variant">
                     <span class="flex items-center gap-1.5">
-                        <span class="h-3 w-3 rounded bg-[#1d5d3f]/25"></span>"绿色深浅 = 赚得多少"
+                        <span class="h-3 w-3 rounded bg-earn/25"></span>"绿色深浅 = 赚得多少"
                     </span>
-                    <span class="font-display font-extrabold text-[#1d5d3f]">"+赚得"</span>
-                    <span class="font-display font-extrabold text-[#f8622f]">"−花掉"</span>
-                    <span class="rounded-full bg-[#ecc22e]/70 px-1.5 font-bold text-[#1d5d3f]">"全勤"</span>
+                    <span class="font-display font-extrabold text-earn">"+赚得"</span>
+                    <span class="font-display font-extrabold text-primary">"−花掉"</span>
+                    <span class="rounded-full bg-earn px-1.5 font-bold text-on-earn">"全勤"</span>
                 </div>
             </div>
 
-            <div class="rounded-3xl border-2 border-border bg-card p-5">
+            <div class="m3-card p-5">
                 <h3 class="font-display text-xl font-bold">
                     {move || {
                         let sel = selected.get();
@@ -222,9 +222,9 @@ pub fn CalendarBoard() -> impl IntoView {
                     {move || {
                         let sel = selected.get();
                         stats.get().get(&sel).copied().map(|s| view! {
-                            <span class="ml-3 text-sm font-bold text-muted-foreground">
-                                "赚 " <span class="text-[#1d5d3f]">"+" {s.earned}</span>
-                                " · 花 " <span class="text-[#f8622f]">"−" {s.spent}</span>
+                            <span class="ml-3 text-sm font-bold text-on-surface-variant">
+                                "赚 " <span class="text-earn">"+" {s.earned}</span>
+                                " · 花 " <span class="text-primary">"−" {s.spent}</span>
                             </span>
                         })
                     }}
@@ -233,25 +233,25 @@ pub fn CalendarBoard() -> impl IntoView {
                     let list = selected_txns.get();
                     if list.is_empty() {
                         view! {
-                            <p class="mt-3 text-sm text-muted-foreground">"这一天没有记录"</p>
+                            <p class="mt-3 text-sm text-on-surface-variant">"这一天没有记录"</p>
                         }.into_any()
                     } else {
                         view! {
-                            <div class="mt-3 divide-y divide-border">
+                            <div class="mt-3 divide-y divide-outline-variant">
                                 {list.into_iter().map(|t| {
                                     let is_earn = t.kind == TxnKind::Earn;
                                     view! {
                                         <div class="flex items-center gap-3 py-2.5">
                                             <span class=format!(
                                                 "flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-display text-sm font-bold {}",
-                                                if is_earn { "bg-[#1d5d3f]/10 text-[#1d5d3f]" } else { "bg-[#f8622f]/10 text-[#f8622f]" }
+                                                if is_earn { "bg-earn-container text-on-earn-container" } else { "bg-primary-container text-on-primary-container" }
                                             )>
                                                 {if is_earn { "+" } else { "−" }}
                                             </span>
                                             <span class="flex-1 font-display font-bold">{t.name}</span>
                                             <span class=format!(
                                                 "font-display font-extrabold {}",
-                                                if is_earn { "text-[#1d5d3f]" } else { "text-[#f8622f]" }
+                                                if is_earn { "text-earn" } else { "text-primary" }
                                             )>
                                                 {if is_earn { "+" } else { "−" }} {t.amount}
                                             </span>
