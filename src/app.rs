@@ -13,8 +13,8 @@ use crate::sections::wishes::Wishes;
 use chrono::Local;
 use leptos::prelude::*;
 
-const HEADER_BTN: &str = "flex items-center gap-1.5 rounded-full border-2 border-border bg-white px-3.5 py-2 font-display text-sm font-bold transition-all";
-const ALERT_CANCEL_CLASS: &str = "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all h-9 px-4 py-2 border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground rounded-full";
+const HEADER_BTN: &str = "m3-btn-outlined";
+const ALERT_CANCEL_CLASS: &str = "m3-btn-outlined";
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -86,13 +86,13 @@ pub fn App() -> impl IntoView {
     view! {
         <div class="min-h-screen pb-16">
             // decorative blobs
-            <div class="pointer-events-none fixed -left-24 -top-24 h-72 w-72 rounded-full bg-[#82eda6]/25 blur-3xl"></div>
-            <div class="pointer-events-none fixed -right-24 top-40 h-80 w-80 rounded-full bg-[#f6bbfd]/20 blur-3xl"></div>
+            <div class="pointer-events-none fixed -left-24 -top-24 h-72 w-72 rounded-full bg-earn-container/60 blur-3xl"></div>
+            <div class="pointer-events-none fixed -right-24 top-40 h-80 w-80 rounded-full bg-primary-container/60 blur-3xl"></div>
 
             <header class="relative mx-auto max-w-3xl px-4 pt-10">
                 <div class="flex items-center justify-between">
                     <div>
-                        <div class="font-display text-sm font-bold tracking-widest text-[#9274b1]">{date_line}</div>
+                        <div class="font-display text-sm font-bold tracking-widest text-on-surface-variant">{date_line}</div>
                         <h1 class="font-display text-4xl font-extrabold tracking-tight">"宝贝积分站"</h1>
                     </div>
                     <div class="flex items-center gap-2">
@@ -108,14 +108,14 @@ pub fn App() -> impl IntoView {
                             }}
                         </button>
                         <button
-                            class=format!("{HEADER_BTN} hover:border-[#4c87bf] hover:text-[#4c87bf]")
+                            class=HEADER_BTN
                             title="导出全部数据为 JSON 文件"
                             on:click=move |_| credits.store.with(|s| crate::persist::export_store(s))
                         >
                             <Icon name="download" class="h-4 w-4" /> " 导出"
                         </button>
                         <button
-                            class=format!("{HEADER_BTN} hover:border-[#1d5d3f] hover:text-[#1d5d3f]")
+                            class=HEADER_BTN
                             title="从 JSON 文件恢复数据"
                             on:click=move |_| {
                                 if let Some(el) = file_ref.get() {
@@ -137,12 +137,12 @@ pub fn App() -> impl IntoView {
                 </div>
 
                 {move || import_error.get().map(|msg| view! {
-                    <div class="mt-3 rounded-2xl border-2 border-[#872020]/30 bg-[#872020]/5 px-4 py-2.5 font-display text-sm font-bold text-[#872020]">
+                    <div class="mt-3 rounded-2xl bg-error-container px-4 py-2.5 font-display text-sm font-bold text-on-error-container">
                         "导入失败：" {msg} "，请确认是本应用导出的 JSON 备份文件"
                     </div>
                 })}
                 {move || import_success.get().map(|n| view! {
-                    <div class="mt-3 rounded-2xl border-2 border-[#1d5d3f]/30 bg-[#1d5d3f]/5 px-4 py-2.5 font-display text-sm font-bold text-[#1d5d3f]">
+                    <div class="mt-3 rounded-2xl bg-earn-container px-4 py-2.5 font-display text-sm font-bold text-on-earn-container">
                         "导入成功！已恢复 " {n} " 个宝贝的全部配置和记录（原有数据已被替换）"
                     </div>
                 })}
@@ -162,18 +162,18 @@ pub fn App() -> impl IntoView {
                                 <div class="group relative">
                                     <button
                                         class=move || format!(
-                                            "flex items-center gap-2 rounded-full border-2 py-1.5 pl-2 pr-4 font-display font-bold transition-all {}",
+                                            "flex items-center gap-2 rounded-full border py-1.5 pl-2 pr-4 font-display font-bold transition-all {}",
                                             if credits.selected_kid_id.get() == Some(id) {
-                                                "border-[#1d5d3f] bg-[#1d5d3f] text-white shadow-md"
+                                                "border-transparent bg-primary text-on-primary shadow-elevation-1"
                                             } else {
-                                                "border-border bg-white hover:border-[#ecc22e]"
+                                                "border-outline-variant bg-surface-container-lowest hover:bg-secondary-container"
                                             }
                                         )
                                         on:click=move |_| credits.selected_kid_id.set(Some(id))
                                     >
                                         <span class=move || format!(
                                             "flex h-8 w-8 items-center justify-center rounded-full text-lg {}",
-                                            if credits.selected_kid_id.get() == Some(id) { "bg-white/15" } else { "bg-[#feffc9]" }
+                                            if credits.selected_kid_id.get() == Some(id) { "bg-on-primary/15" } else { "bg-secondary-container" }
                                         )>
                                             {avatar.clone()}
                                         </span>
@@ -185,7 +185,7 @@ pub fn App() -> impl IntoView {
                                         view! {
                                             <div class="absolute -top-3 right-0 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                                                 <button
-                                                    class="flex h-6 w-6 items-center justify-center rounded-full bg-white text-[#4c87bf] shadow hover:scale-110"
+                                                    class="flex h-6 w-6 items-center justify-center rounded-full bg-surface-container-lowest text-primary shadow-elevation-1 hover:scale-110"
                                                     aria-label="编辑宝贝"
                                                     on:click=move |_| {
                                                         editing_kid.set(Some(ke.clone()));
@@ -195,7 +195,7 @@ pub fn App() -> impl IntoView {
                                                     <Icon name="pencil" class="h-3 w-3" />
                                                 </button>
                                                 <button
-                                                    class="flex h-6 w-6 items-center justify-center rounded-full bg-white text-[#872020] shadow hover:scale-110"
+                                                    class="flex h-6 w-6 items-center justify-center rounded-full bg-surface-container-lowest text-error shadow-elevation-1 hover:scale-110"
                                                     aria-label="删除宝贝"
                                                     on:click=move |_| {
                                                         deleting_kid.set(Some(kd.clone()));
@@ -212,7 +212,7 @@ pub fn App() -> impl IntoView {
                         }
                     />
                     <button
-                        class="flex items-center gap-1 rounded-full border-2 border-dashed border-[#9274b1]/50 px-4 py-2 font-display font-bold text-[#9274b1] transition-all hover:border-[#9274b1] hover:bg-[#f3ecfa]"
+                        class="flex items-center gap-1 rounded-full border border-dashed border-outline px-4 py-2 font-display font-bold text-primary transition-all hover:bg-secondary-container"
                         on:click=move |_| {
                             editing_kid.set(None);
                             kid_dialog_open.set(true);
@@ -230,32 +230,32 @@ pub fn App() -> impl IntoView {
                     };
                     let task_count = credits.tasks.get().len();
                     view! {
-                        <div class="mt-6 overflow-hidden rounded-[2rem] bg-[#1d5d3f] p-6 text-white shadow-lg">
+                        <div class="mt-6 overflow-hidden rounded-[2rem] bg-primary p-6 text-on-primary shadow-elevation-2">
                             <div class="flex flex-wrap items-end justify-between gap-4">
                                 <div>
-                                    <div class="font-display text-sm font-bold tracking-widest text-[#82eda6]">
+                                    <div class="font-display text-sm font-bold tracking-widest text-on-primary/80">
                                         {k.avatar} " " {k.name} " 的当前积分"
                                     </div>
-                                    <div class="font-display text-6xl font-extrabold leading-none text-[#ecc22e]">
+                                    <div class="font-display text-6xl font-extrabold leading-none text-on-primary">
                                         {credits.balance.get()}
                                     </div>
                                 </div>
                                 <div class="flex gap-6">
                                     <div>
-                                        <div class="text-xs text-white/70">"累计赚得"</div>
-                                        <div class="font-display text-2xl font-bold text-[#82eda6]">
+                                        <div class="text-xs text-on-primary/70">"累计赚得"</div>
+                                        <div class="font-display text-2xl font-bold text-on-primary">
                                             "+" {credits.total_earned.get()}
                                         </div>
                                     </div>
                                     <div>
-                                        <div class="text-xs text-white/70">"累计花掉"</div>
-                                        <div class="font-display text-2xl font-bold text-[#f6bbfd]">
+                                        <div class="text-xs text-on-primary/70">"累计花掉"</div>
+                                        <div class="font-display text-2xl font-bold text-on-primary">
                                             "−" {credits.total_spent.get()}
                                         </div>
                                     </div>
                                     <div>
-                                        <div class="text-xs text-white/70">"今日打卡"</div>
-                                        <div class="font-display text-2xl font-bold text-[#fdc068]">
+                                        <div class="text-xs text-on-primary/70">"今日打卡"</div>
+                                        <div class="font-display text-2xl font-bold text-on-primary">
                                             {done_count} "/" {task_count}
                                         </div>
                                     </div>
@@ -270,7 +270,7 @@ pub fn App() -> impl IntoView {
                 {move || {
                     if credits.kid.get().is_none() {
                         view! {
-                            <div class="rounded-3xl border-2 border-dashed border-border bg-card/50 p-14 text-center">
+                            <div class="rounded-3xl border-2 border-dashed border-outline-variant bg-surface-container-low/50 p-14 text-center text-on-surface-variant">
                                 <div class="mb-3 text-5xl">"👋"</div>
                                 <p class="font-display text-lg font-bold">"先添加一个宝贝，开始攒积分吧！"</p>
                             </div>
@@ -278,20 +278,20 @@ pub fn App() -> impl IntoView {
                     } else {
                         view! {
                             <Tabs default_value="today">
-                                <TabsList class="grid h-auto w-full grid-cols-5 rounded-full bg-white p-1.5 shadow-sm">
-                                    <TabsTrigger value="today" class="rounded-full py-2 font-display font-bold" active_class="bg-[#1d5d3f] text-white">
+                                <TabsList class="grid h-auto w-full grid-cols-5 rounded-full bg-surface-container-low p-1.5">
+                                    <TabsTrigger value="today" class="rounded-full py-2 font-display font-bold text-on-surface-variant" active_class="bg-primary text-on-primary shadow-elevation-1">
                                         <Icon name="calendar-check" class="mr-1.5 h-4 w-4" />"打卡
                                     "</TabsTrigger>
-                                    <TabsTrigger value="wishes" class="rounded-full py-2 font-display font-bold" active_class="bg-[#9274b1] text-white">
+                                    <TabsTrigger value="wishes" class="rounded-full py-2 font-display font-bold text-on-surface-variant" active_class="bg-primary text-on-primary shadow-elevation-1">
                                         <Icon name="gift" class="mr-1.5 h-4 w-4" />"心愿
                                     "</TabsTrigger>
-                                    <TabsTrigger value="calendar" class="rounded-full py-2 font-display font-bold" active_class="bg-[#ecc22e] text-[#1d5d3f]">
+                                    <TabsTrigger value="calendar" class="rounded-full py-2 font-display font-bold text-on-surface-variant" active_class="bg-primary text-on-primary shadow-elevation-1">
                                         <Icon name="calendar-days" class="mr-1.5 h-4 w-4" />"日历
                                     "</TabsTrigger>
-                                    <TabsTrigger value="charts" class="rounded-full py-2 font-display font-bold" active_class="bg-[#f8622f] text-white">
+                                    <TabsTrigger value="charts" class="rounded-full py-2 font-display font-bold text-on-surface-variant" active_class="bg-primary text-on-primary shadow-elevation-1">
                                         <Icon name="bar-chart-3" class="mr-1.5 h-4 w-4" />"图表
                                     "</TabsTrigger>
-                                    <TabsTrigger value="history" class="rounded-full py-2 font-display font-bold" active_class="bg-[#4c87bf] text-white">
+                                    <TabsTrigger value="history" class="rounded-full py-2 font-display font-bold text-on-surface-variant" active_class="bg-primary text-on-primary shadow-elevation-1">
                                         <Icon name="scroll-text" class="mr-1.5 h-4 w-4" />"记录
                                     "</TabsTrigger>
                                 </TabsList>
@@ -317,7 +317,7 @@ pub fn App() -> impl IntoView {
                 }
             />
 
-            <Dialog open=delete_open show_close=false content_class="rounded-3xl">
+            <Dialog open=delete_open show_close=false>
                 <div class="flex flex-col gap-2 text-center sm:text-left">
                     <h2 class="text-lg font-semibold font-display text-xl">
                         "删除「" {move || deleting_kid.get().map(|k| k.name).unwrap_or_default()} "」？"
@@ -331,7 +331,7 @@ pub fn App() -> impl IntoView {
                         取消
                     </button>
                     <button
-                        class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all h-9 px-4 py-2 rounded-full bg-[#872020] text-white hover:bg-[#6d1a1a]"
+                        class="m3-btn-danger"
                         on:click=move |_| {
                             if let Some(k) = deleting_kid.get() {
                                 credits.delete_kid(k.id);
