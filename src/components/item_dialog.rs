@@ -43,7 +43,7 @@ pub fn ItemDialog(
     });
 
     view! {
-        <Dialog open=open content_class="rounded-3xl sm:max-w-md">
+        <Dialog open=open content_class="sm:max-w-md">
             <h2 class="text-lg leading-none font-semibold font-display text-xl">{move || title.get()}</h2>
             <div class="space-y-4 py-2">
                 <div class="space-y-2">
@@ -72,7 +72,7 @@ pub fn ItemDialog(
                                         type="button"
                                         class=move || format!(
                                             "flex h-9 items-center justify-center rounded-xl text-xl transition-all {}",
-                                            if icon.get() == cur { "bg-[#ecc22e] scale-110 shadow-sm" } else { "bg-muted hover:bg-[#feffc9]" }
+                                            if icon.get() == cur { "bg-primary-container ring-2 ring-primary scale-110" } else { "bg-surface-container-low hover:bg-secondary-container" }
                                         )
                                         on:click=move |_| icon.set(ic2.to_string())
                                     >

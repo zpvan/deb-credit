@@ -322,7 +322,7 @@ pub fn App() -> impl IntoView {
                     <h2 class="text-lg font-semibold font-display text-xl">
                         "删除「" {move || deleting_kid.get().map(|k| k.name).unwrap_or_default()} "」？"
                     </h2>
-                    <p class="text-muted-foreground text-sm">
+                    <p class="text-on-surface-variant text-sm">
                         "将同时删除该宝贝的所有任务、心愿和积分记录，此操作不可恢复。"
                     </p>
                 </div>

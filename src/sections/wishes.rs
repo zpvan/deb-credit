@@ -30,7 +30,7 @@ pub fn Wishes() -> impl IntoView {
             <div class="mb-4 flex items-end justify-between">
                 <div>
                     <h2 class="font-display text-2xl font-bold">"心愿兑换"</h2>
-                    <p class="text-sm text-muted-foreground">"攒够积分，就可以兑换心愿啦"</p>
+                    <p class="text-sm text-on-surface-variant">"攒够积分，就可以兑换心愿啦"</p>
                 </div>
                 <button
                     class="m3-btn-filled"
@@ -163,7 +163,7 @@ pub fn Wishes() -> impl IntoView {
                     <h2 class="text-lg font-semibold font-display text-xl">
                         "兑换「" {move || confirming.get().map(|w| w.name).unwrap_or_default()} "」？"
                     </h2>
-                    <p class="text-muted-foreground text-sm">
+                    <p class="text-on-surface-variant text-sm">
                         "将消耗 "
                         <span class="font-display font-bold text-primary">
                             {move || confirming.get().map(|w| w.cost).unwrap_or(0)}

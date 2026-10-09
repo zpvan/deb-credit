@@ -26,14 +26,14 @@ pub fn TabsList(
 ) -> impl IntoView {
     view! {
         <div role="tablist" class=format!(
-            "bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center rounded-lg p-[3px] {class}"
+            "text-on-surface-variant inline-flex h-9 w-fit items-center justify-center rounded-full p-[3px] {class}"
         )>
             {children()}
         </div>
     }
 }
 
-const TRIGGER_BASE: &str = "inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] disabled:pointer-events-none disabled:opacity-50";
+const TRIGGER_BASE: &str = "inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] disabled:pointer-events-none disabled:opacity-50";
 
 #[component]
 pub fn TabsTrigger(

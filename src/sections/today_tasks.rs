@@ -36,7 +36,7 @@ pub fn TodayTasks() -> impl IntoView {
             <div class="mb-4 flex items-end justify-between">
                 <div>
                     <h2 class="font-display text-2xl font-bold">"今日打卡"</h2>
-                    <p class="text-sm text-muted-foreground">
+                    <p class="text-sm text-on-surface-variant">
                         "已完成 " {move || done_count.get()} "/" {move || credits.tasks.get().len()}
                         " 项，今天赚到 "
                         <span class="font-display font-bold text-primary">

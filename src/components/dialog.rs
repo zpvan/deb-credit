@@ -1,7 +1,7 @@
 use crate::icons::Icon;
 use leptos::prelude::*;
 
-const CONTENT_BASE: &str = "bg-background fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 outline-none sm:max-w-lg";
+const CONTENT_BASE: &str = "bg-surface-container-high text-on-surface fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-[28px] p-6 shadow-elevation-3 duration-200 outline-none sm:max-w-lg";
 
 /// 受控对话框：open 为 true 时渲染遮罩 + 居中面板。
 /// 点击遮罩、按 Esc、点右上角 X（show_close=true 时）均关闭。
@@ -25,7 +25,7 @@ pub fn Dialog(
         {move || {
             if open.get() {
                 Some(view! {
-                    <div class="fixed inset-0 z-50 bg-black/50" on:click=move |_| open.set(false)>
+                    <div class="fixed inset-0 z-50 bg-black/40" on:click=move |_| open.set(false)>
                         <div
                             node_ref=panel_ref
                             tabindex="-1"
@@ -42,7 +42,7 @@ pub fn Dialog(
                             {children()}
                             {show_close.then(|| view! {
                                 <button
-                                    class="absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100"
+                                    class="m3-icon-btn absolute top-3 right-3 h-8 w-8"
                                     on:click=move |_| open.set(false)
                                     aria-label="Close"
                                 >
