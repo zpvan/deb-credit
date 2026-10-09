@@ -4,6 +4,8 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
+**[Live Demo](https://zpvan.github.io/deb-credit/)**
+
 A kid-friendly credit & reward tracker: children check in daily tasks to earn
 credits, then redeem them for wishes. A single-page app that runs entirely in
 the browser — no account, no server, all data stays on the device.
