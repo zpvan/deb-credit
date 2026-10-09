@@ -1,5 +1,6 @@
 use crate::components::item_dialog::{ItemDialog, TASK_ICONS};
 use crate::credits::Credits;
+use crate::i18n::{t, today_progress_pre, today_progress_suffix, use_lang, K};
 use crate::icons::Icon;
 use crate::models::EarnTask;
 use leptos::prelude::*;
@@ -8,6 +9,7 @@ use std::time::Duration;
 #[component]
 pub fn TodayTasks() -> impl IntoView {
     let credits = use_context::<Credits>().expect("Credits context");
+    let lang = use_lang();
     let dialog_open = RwSignal::new(false);
     let editing = RwSignal::new(None::<EarnTask>);
     let just_done = RwSignal::new(None::<i64>);
@@ -28,21 +30,20 @@ pub fn TodayTasks() -> impl IntoView {
         editing.get().map(|t| (t.name.clone(), t.credit, t.icon.clone()))
     });
     let dialog_title = Signal::derive(move || {
-        if editing.get().is_some() { "编辑任务" } else { "添加赚积分任务" }
+        if editing.get().is_some() { t(lang.get(), K::EditTask) } else { t(lang.get(), K::AddTask) }
     });
 
     view! {
         <section>
             <div class="mb-4 flex items-end justify-between">
                 <div>
-                    <h2 class="font-display text-2xl font-bold">"今日打卡"</h2>
+                    <h2 class="font-display text-2xl font-bold">{move || t(lang.get(), K::TodayTitle)}</h2>
                     <p class="text-sm text-on-surface-variant">
-                        "已完成 " {move || done_count.get()} "/" {move || credits.tasks.get().len()}
-                        " 项，今天赚到 "
+                        {move || today_progress_pre(lang.get(), done_count.get(), credits.tasks.get().len())}
                         <span class="font-display font-bold text-primary">
                             "+" {move || earned_today.get()}
                         </span>
-                        " 积分"
+                        {move || today_progress_suffix(lang.get())}
                     </p>
                 </div>
                 <button
@@ -52,7 +53,7 @@ pub fn TodayTasks() -> impl IntoView {
                         dialog_open.set(true);
                     }
                 >
-                    <Icon name="plus" class="mr-1 h-4 w-4" /> " 新任务"
+                    <Icon name="plus" class="mr-1 h-4 w-4" /> " " {move || t(lang.get(), K::NewTask)}
                 </button>
             </div>
 
@@ -60,12 +61,12 @@ pub fn TodayTasks() -> impl IntoView {
                 <For
                     each=move || credits.tasks.get()
                     key=|t| t.id
-                    children=move |t: EarnTask| {
-                        let id = t.id;
-                        let icon = t.icon.clone();
-                        let name = t.name.clone();
-                        let credit = t.credit;
-                        let t_edit = t.clone();
+                    children=move |task: EarnTask| {
+                        let id = task.id;
+                        let icon = task.icon.clone();
+                        let name = task.name.clone();
+                        let credit = task.credit;
+                        let t_edit = task.clone();
                         view! {
                             <div class=move || {
                                 let done = credits.is_task_done(id);
@@ -110,7 +111,7 @@ pub fn TodayTasks() -> impl IntoView {
                                             "font-display text-sm font-semibold {}",
                                             if credits.is_task_done(id) { "text-on-earn/80" } else { "text-primary" }
                                         )>
-                                            "+" {credit} " 积分"
+                                            "+" {credit} " " {move || t(lang.get(), K::CreditsUnit)}
                                         </span>
                                     </span>
                                     <span class=move || format!(
@@ -127,7 +128,7 @@ pub fn TodayTasks() -> impl IntoView {
                                 <div class="absolute -top-2 right-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                                     <button
                                         class="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-lowest text-primary shadow-elevation-1 hover:scale-110"
-                                        aria-label="编辑"
+                                        aria-label=move || t(lang.get(), K::Edit)
                                         on:click=move |_| {
                                             editing.set(Some(t_edit.clone()));
                                             dialog_open.set(true);
@@ -137,7 +138,7 @@ pub fn TodayTasks() -> impl IntoView {
                                     </button>
                                     <button
                                         class="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-lowest text-error shadow-elevation-1 hover:scale-110"
-                                        aria-label="删除"
+                                        aria-label=move || t(lang.get(), K::Delete)
                                         on:click=move |_| credits.remove_task(id)
                                     >
                                         <Icon name="trash-2" class="h-3.5 w-3.5" />
@@ -152,7 +153,7 @@ pub fn TodayTasks() -> impl IntoView {
             <ItemDialog
                 open=dialog_open
                 title=dialog_title
-                value_label="完成可获得的积分"
+                value_label=t(lang.get_untracked(), K::TaskValueLabel)
                 icons=TASK_ICONS
                 initial=initial
                 on_save=move |(name, value, icon): (String, i64, String)| {

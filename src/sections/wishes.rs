@@ -1,6 +1,7 @@
 use crate::components::dialog::Dialog;
 use crate::components::item_dialog::{ItemDialog, WISH_ICONS};
 use crate::credits::Credits;
+use crate::i18n::{redeem_body_pre, redeem_body_rest, redeem_title, t, use_lang, wish_cost, wish_gap, K};
 use crate::icons::Icon;
 use crate::models::WishItem;
 use leptos::prelude::*;
@@ -12,6 +13,7 @@ const ALERT_ACTION_CLASS: &str = "m3-btn-filled";
 #[component]
 pub fn Wishes() -> impl IntoView {
     let credits = use_context::<Credits>().expect("Credits context");
+    let lang = use_lang();
     let dialog_open = RwSignal::new(false);
     let editing = RwSignal::new(None::<WishItem>);
     let confirming = RwSignal::new(None::<WishItem>);
@@ -22,15 +24,15 @@ pub fn Wishes() -> impl IntoView {
         editing.get().map(|w| (w.name.clone(), w.cost, w.icon.clone()))
     });
     let dialog_title = Signal::derive(move || {
-        if editing.get().is_some() { "编辑心愿" } else { "添加兑换心愿" }
+        if editing.get().is_some() { t(lang.get(), K::EditWish) } else { t(lang.get(), K::AddWish) }
     });
 
     view! {
         <section>
             <div class="mb-4 flex items-end justify-between">
                 <div>
-                    <h2 class="font-display text-2xl font-bold">"心愿兑换"</h2>
-                    <p class="text-sm text-on-surface-variant">"攒够积分，就可以兑换心愿啦"</p>
+                    <h2 class="font-display text-2xl font-bold">{move || t(lang.get(), K::WishesTitle)}</h2>
+                    <p class="text-sm text-on-surface-variant">{move || t(lang.get(), K::WishesSubtitle)}</p>
                 </div>
                 <button
                     class="m3-btn-filled"
@@ -39,7 +41,7 @@ pub fn Wishes() -> impl IntoView {
                         dialog_open.set(true);
                     }
                 >
-                    <Icon name="plus" class="mr-1 h-4 w-4" /> " 新心愿"
+                    <Icon name="plus" class="mr-1 h-4 w-4" /> " " {move || t(lang.get(), K::NewWish)}
                 </button>
             </div>
 
@@ -70,7 +72,7 @@ pub fn Wishes() -> impl IntoView {
                                     <div class="flex-1">
                                         <div class="font-display text-lg font-bold leading-tight">{name.clone()}</div>
                                         <div class="font-display text-sm font-semibold text-on-surface-variant">
-                                            "需要 " {cost} " 积分"
+                                            {move || wish_cost(lang.get(), cost)}
                                         </div>
                                     </div>
                                     <button
@@ -95,9 +97,9 @@ pub fn Wishes() -> impl IntoView {
                                         {move || {
                                             let bal = credits.balance.get();
                                             if bal >= cost {
-                                                "兑换".to_string()
+                                                t(lang.get(), K::Redeem).to_string()
                                             } else {
-                                                format!("还差 {}", cost - bal)
+                                                wish_gap(lang.get(), cost - bal)
                                             }
                                         }}
                                     </button>
@@ -122,7 +124,7 @@ pub fn Wishes() -> impl IntoView {
                                 <div class="absolute -top-2 right-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                                     <button
                                         class="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-lowest text-primary shadow-elevation-1 hover:scale-110"
-                                        aria-label="编辑"
+                                        aria-label=move || t(lang.get(), K::Edit)
                                         on:click=move |_| {
                                             editing.set(Some(w_edit.clone()));
                                             dialog_open.set(true);
@@ -132,7 +134,7 @@ pub fn Wishes() -> impl IntoView {
                                     </button>
                                     <button
                                         class="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-lowest text-error shadow-elevation-1 hover:scale-110"
-                                        aria-label="删除"
+                                        aria-label=move || t(lang.get(), K::Delete)
                                         on:click=move |_| credits.remove_wish(id)
                                     >
                                         <Icon name="trash-2" class="h-3.5 w-3.5" />
@@ -147,7 +149,7 @@ pub fn Wishes() -> impl IntoView {
             <ItemDialog
                 open=dialog_open
                 title=dialog_title
-                value_label="兑换所需积分"
+                value_label=t(lang.get_untracked(), K::WishValueLabel)
                 icons=WISH_ICONS
                 initial=initial
                 on_save=move |(name, value, icon): (String, i64, String)| {
@@ -161,24 +163,22 @@ pub fn Wishes() -> impl IntoView {
             <Dialog open=confirm_open show_close=false>
                 <div class="flex flex-col gap-2 text-center sm:text-left">
                     <h2 class="text-lg font-semibold font-display text-xl">
-                        "兑换「" {move || confirming.get().map(|w| w.name).unwrap_or_default()} "」？"
+                        {move || redeem_title(lang.get(), &confirming.get().map(|w| w.name).unwrap_or_default())}
                     </h2>
                     <p class="text-on-surface-variant text-sm">
-                        "将消耗 "
+                        {move || redeem_body_pre(lang.get())}
                         <span class="font-display font-bold text-primary">
                             {move || confirming.get().map(|w| w.cost).unwrap_or(0)}
                         </span>
-                        " 积分，兑换后剩余 "
-                        {move || {
+                        {move || redeem_body_rest(lang.get(), {
                             let cost = confirming.get().map(|w| w.cost).unwrap_or(0);
                             credits.balance.get() - cost
-                        }}
-                        " 积分。"
+                        })}
                     </p>
                 </div>
                 <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                     <button class=ALERT_CANCEL_CLASS on:click=move |_| confirm_open.set(false)>
-                        再想想
+                        {move || t(lang.get(), K::NotYet)}
                     </button>
                     <button
                         class=ALERT_ACTION_CLASS
@@ -191,7 +191,7 @@ pub fn Wishes() -> impl IntoView {
                             confirm_open.set(false);
                         }
                     >
-                        确定兑换
+                        {move || t(lang.get(), K::ConfirmRedeem)}
                     </button>
                 </div>
             </Dialog>
