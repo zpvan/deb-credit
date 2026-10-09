@@ -44,7 +44,11 @@ npm install --no-save tailwindcss@3.4.19   # or use the standalone CLI v3.4.x
 ### Develop
 
 ```bash
-TRUNK_TOOLS_TAILWINDCSS=$PWD/node_modules/.bin/tailwindcss trunk serve
+# terminal 1 — compile CSS (source: style/main.css → output: public/main.css), watch mode
+./node_modules/.bin/tailwindcss -c tailwind.config.js -i style/main.css -o public/main.css --watch
+
+# terminal 2 — dev server
+trunk serve
 ```
 
 ### Test
@@ -56,7 +60,8 @@ cargo test   # data-layer unit tests
 ### Build
 
 ```bash
-TRUNK_TOOLS_TAILWINDCSS=$PWD/node_modules/.bin/tailwindcss trunk build --release
+./node_modules/.bin/tailwindcss -c tailwind.config.js -i style/main.css -o public/main.css --minify
+trunk build --release
 ```
 
 The static site is emitted to `dist/` and can be hosted anywhere.

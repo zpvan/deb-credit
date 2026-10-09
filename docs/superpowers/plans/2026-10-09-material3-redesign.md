@@ -12,8 +12,10 @@
 
 **构建/验证命令（全计划通用）：**
 
+> 注：执行中发现 `TRUNK_TOOLS_TAILWINDCSS` 路径方式在 trunk 0.21 下不生效（被当作版本号去下载）。已改为：CSS 源文件放 `style/main.css`，用 tailwind CLI 直接编译到 `public/main.css`（产物不入库），`index.html` 保持 `rel="css"` 纯拷贝。
+
 ```bash
-export TRUNK_TOOLS_TAILWINDCSS=$PWD/node_modules/.bin/tailwindcss
+./node_modules/.bin/tailwindcss -c tailwind.config.js -i style/main.css -o public/main.css
 cargo test                # 数据层 + 图表测试
 trunk build               # 快速构建验证（dev）
 ```

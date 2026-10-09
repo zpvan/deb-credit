@@ -24,3 +24,6 @@ Thumbs.db
 .env
 .env.*
 .superpowers/
+
+# tailwind 编译产物（源文件在 style/main.css）
+public/main.css

@@ -36,7 +36,9 @@ jobs:
 
       - run: npm install --no-save tailwindcss@3.4.19
 
-      - run: TRUNK_TOOLS_TAILWINDCSS=$PWD/node_modules/.bin/tailwindcss trunk build --release --public-url /deb-credit/
+      - run: ./node_modules/.bin/tailwindcss -c tailwind.config.js -i style/main.css -o public/main.css --minify
+
+      - run: trunk build --release --public-url /deb-credit/
 
       - uses: actions/upload-pages-artifact@v3
         with:

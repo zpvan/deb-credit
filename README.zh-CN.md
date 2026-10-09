@@ -42,7 +42,11 @@ npm install --no-save tailwindcss@3.4.19   # 或使用 standalone CLI v3.4.x
 ### 开发
 
 ```bash
-TRUNK_TOOLS_TAILWINDCSS=$PWD/node_modules/.bin/tailwindcss trunk serve
+# 终端 1 — 编译 CSS（源文件 style/main.css → 产物 public/main.css），watch 模式
+./node_modules/.bin/tailwindcss -c tailwind.config.js -i style/main.css -o public/main.css --watch
+
+# 终端 2 — 开发服务器
+trunk serve
 ```
 
 ### 测试
@@ -54,7 +58,8 @@ cargo test   # 数据层单元测试
 ### 构建
 
 ```bash
-TRUNK_TOOLS_TAILWINDCSS=$PWD/node_modules/.bin/tailwindcss trunk build --release
+./node_modules/.bin/tailwindcss -c tailwind.config.js -i style/main.css -o public/main.css --minify
+trunk build --release
 ```
 
 静态站点输出到 `dist/`，可托管到任意静态服务器。
