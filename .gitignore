@@ -28,3 +28,6 @@ Thumbs.db
 # tailwind 编译产物（源文件在 style/main.css）
 public/main.css
 .playwright-mcp/
+
+# Superpowers 流程文档（本地工作文件，不入库）
+docs/superpowers/
