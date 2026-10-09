@@ -1,4 +1,5 @@
 use chrono::{Datelike, Duration, Local, NaiveDate, Utc};
+use crate::i18n::Lang;
 
 /// 对应原版 todayStr()：本地时区 YYYY-MM-DD
 pub fn today_str() -> String {
@@ -48,6 +49,52 @@ pub fn header_date_label(d: NaiveDate) -> String {
 /// "10/2"
 pub fn date_label_md(d: NaiveDate) -> String {
     format!("{}/{}", d.month(), d.day())
+}
+
+pub const WEEKDAYS_ZH: [&str; 7] = ["一", "二", "三", "四", "五", "六", "日"];
+pub const WEEKDAYS_EN: [&str; 7] = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+pub const WEEKDAYS_EN_LONG: [&str; 7] =
+    ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+pub const MONTHS_EN: [&str; 12] = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+];
+
+/// 日历表头的星期标签（周一开头）
+pub fn weekday_labels(lang: Lang) -> [&'static str; 7] {
+    match lang {
+        Lang::En => WEEKDAYS_EN,
+        Lang::Zh => WEEKDAYS_ZH,
+    }
+}
+
+/// 顶栏日期行：中「2026-10-09 · 10月9日 星期五」/ 英「Friday, October 9, 2026」
+pub fn header_date_line(lang: Lang, today: NaiveDate) -> String {
+    let wd = today.weekday().num_days_from_monday() as usize;
+    match lang {
+        Lang::En => format!(
+            "{}, {} {}, {}",
+            WEEKDAYS_EN_LONG[wd],
+            MONTHS_EN[today.month() as usize - 1],
+            today.day(),
+            today.year()
+        ),
+        Lang::Zh => format!(
+            "{} · {}月{}日 星期{}",
+            format_date(today.year(), today.month(), today.day()),
+            today.month(),
+            today.day(),
+            WEEKDAYS_ZH[wd]
+        ),
+    }
+}
+
+/// 日历月份标题：中「2026年10月」/ 英「October 2026」
+pub fn month_title(lang: Lang, year: i32, month: u32) -> String {
+    match lang {
+        Lang::En => format!("{} {}", MONTHS_EN[month as usize - 1], year),
+        Lang::Zh => format!("{year}年{month}月"),
+    }
 }
 
 #[cfg(test)]
@@ -100,5 +147,22 @@ mod tests {
     #[test]
     fn date_label_md_formats() {
         assert_eq!(date_label_md(d("2026-10-02")), "10/2");
+    }
+
+    #[test]
+    fn header_date_line_zh() {
+        // 2026-10-08 是周四
+        assert_eq!(header_date_line(Lang::Zh, d("2026-10-08")), "2026-10-08 · 10月8日 星期四");
+    }
+
+    #[test]
+    fn header_date_line_en() {
+        assert_eq!(header_date_line(Lang::En, d("2026-10-08")), "Thursday, October 8, 2026");
+    }
+
+    #[test]
+    fn month_title_both_langs() {
+        assert_eq!(month_title(Lang::Zh, 2026, 10), "2026年10月");
+        assert_eq!(month_title(Lang::En, 2026, 10), "October 2026");
     }
 }
