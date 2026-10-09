@@ -335,7 +335,7 @@ pub fn App() -> impl IntoView {
                 on_save=move |(name, avatar): (String, String)| {
                     match editing_kid.get_untracked() {
                         Some(k) => credits.update_kid(k.id, &name, &avatar),
-                        None => credits.create_kid(&name, &avatar),
+                        None => credits.create_kid(&name, &avatar, lang.get_untracked()),
                     }
                 }
             />

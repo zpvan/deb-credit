@@ -144,9 +144,9 @@ impl Credits {
 
     /* ---------- kids ---------- */
 
-    pub fn create_kid(&self, name: &str, avatar: &str) {
+    pub fn create_kid(&self, name: &str, avatar: &str, lang: crate::i18n::Lang) {
         let mut id = 0;
-        self.store.update(|s| id = s.create_kid(name, avatar));
+        self.store.update(|s| id = s.create_kid(name, avatar, lang));
         self.selected_kid_id.set(Some(id));
     }
 

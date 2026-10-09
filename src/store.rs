@@ -1,18 +1,39 @@
+use crate::i18n::Lang;
 use crate::models::*;
 
-pub const DEFAULT_TASKS: [(&str, i64, &str); 4] = [
-    ("按时起床", 2, "⏰"),
-    ("跳绳 5 分钟", 3, "🤸"),
-    ("学唱英文歌", 3, "🎵"),
-    ("准时睡觉", 2, "🌙"),
-];
+pub fn default_tasks(lang: Lang) -> &'static [(&'static str, i64, &'static str)] {
+    match lang {
+        Lang::En => &[
+            ("Wake up on time", 2, "⏰"),
+            ("Jump rope 5 min", 3, "🤸"),
+            ("Sing an English song", 3, "🎵"),
+            ("Go to bed on time", 2, "🌙"),
+        ],
+        Lang::Zh => &[
+            ("按时起床", 2, "⏰"),
+            ("跳绳 5 分钟", 3, "🤸"),
+            ("学唱英文歌", 3, "🎵"),
+            ("准时睡觉", 2, "🌙"),
+        ],
+    }
+}
 
-pub const DEFAULT_WISHES: [(&str, i64, &str); 4] = [
-    ("吃冰淇淋", 10, "🍦"),
-    ("买零食", 15, "🍿"),
-    ("看一集动画片", 8, "📺"),
-    ("暑假去旅游", 200, "✈️"),
-];
+pub fn default_wishes(lang: Lang) -> &'static [(&'static str, i64, &'static str)] {
+    match lang {
+        Lang::En => &[
+            ("Ice cream", 10, "🍦"),
+            ("Snacks", 15, "🍿"),
+            ("Watch a cartoon", 8, "📺"),
+            ("Summer trip", 200, "✈️"),
+        ],
+        Lang::Zh => &[
+            ("吃冰淇淋", 10, "🍦"),
+            ("买零食", 15, "🍿"),
+            ("看一集动画片", 8, "📺"),
+            ("暑假去旅游", 200, "✈️"),
+        ],
+    }
+}
 
 #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize, PartialEq)]
 pub struct Store {
@@ -39,9 +60,9 @@ impl Store {
 
     /* ---------- kids ---------- */
 
-    pub fn create_kid(&mut self, name: &str, avatar: &str) -> i64 {
+    pub fn create_kid(&mut self, name: &str, avatar: &str, lang: Lang) -> i64 {
         let id = self.next_id();
-        for (n, c, i) in DEFAULT_TASKS {
+        for (n, c, i) in default_tasks(lang).iter().copied() {
             let tid = self.next_id();
             self.tasks.push(EarnTask {
                 id: tid,
@@ -51,7 +72,7 @@ impl Store {
                 icon: i.into(),
             });
         }
-        for (n, c, i) in DEFAULT_WISHES {
+        for (n, c, i) in default_wishes(lang).iter().copied() {
             let wid = self.next_id();
             self.wishes.push(WishItem {
                 id: wid,
@@ -297,7 +318,7 @@ mod tests {
     #[test]
     fn create_kid_assigns_id_and_defaults() {
         let mut s = Store::empty();
-        let id = s.create_kid("小宝", "🧒");
+        let id = s.create_kid("小宝", "🧒", Lang::Zh);
         assert_eq!(s.kids.len(), 1);
         assert_eq!(s.kids[0].name, "小宝");
         assert_eq!(s.tasks.len(), 4);
@@ -312,10 +333,18 @@ mod tests {
     }
 
     #[test]
+    fn create_kid_en_seeds_english_defaults() {
+        let mut s = Store::empty();
+        s.create_kid("Alex", "🧒", Lang::En);
+        assert_eq!(s.tasks[0].name, "Wake up on time");
+        assert_eq!(s.wishes[3].name, "Summer trip");
+    }
+
+    #[test]
     fn ids_are_unique_across_entities() {
         let mut s = Store::empty();
-        s.create_kid("甲", "🧒");
-        s.create_kid("乙", "👧");
+        s.create_kid("甲", "🧒", Lang::Zh);
+        s.create_kid("乙", "👧", Lang::Zh);
         let mut ids: Vec<i64> = s
             .kids
             .iter()
@@ -331,7 +360,7 @@ mod tests {
     #[test]
     fn update_kid_changes_name_and_avatar() {
         let mut s = Store::empty();
-        let id = s.create_kid("小宝", "🧒");
+        let id = s.create_kid("小宝", "🧒", Lang::Zh);
         s.update_kid(id, "大宝", "🐯");
         assert_eq!(s.kids[0].name, "大宝");
         assert_eq!(s.kids[0].avatar, "🐯");
@@ -340,8 +369,8 @@ mod tests {
     #[test]
     fn delete_kid_cascades() {
         let mut s = Store::empty();
-        let a = s.create_kid("甲", "🧒");
-        let b = s.create_kid("乙", "👧");
+        let a = s.create_kid("甲", "🧒", Lang::Zh);
+        let b = s.create_kid("乙", "👧", Lang::Zh);
         s.txns.push(Txn {
             id: 900,
             kid_id: a,
@@ -363,7 +392,7 @@ mod tests {
 
     fn store_with_kid() -> (Store, i64) {
         let mut s = Store::empty();
-        let id = s.create_kid("小宝", "🧒");
+        let id = s.create_kid("小宝", "🧒", Lang::Zh);
         (s, id)
     }
 
