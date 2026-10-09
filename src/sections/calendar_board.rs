@@ -74,7 +74,7 @@ pub fn CalendarBoard() -> impl IntoView {
                         >
                             <Icon name="chevron-left" class="h-5 w-5" />
                         </button>
-                        <span class="w-28 text-center font-display text-lg font-extrabold">
+                        <span class="min-w-28 text-center font-display text-lg font-extrabold whitespace-nowrap">
                             {move || crate::date::month_title(lang.get(), view_year.get(), view_month.get())}
                         </span>
                         <button
