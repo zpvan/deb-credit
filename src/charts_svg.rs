@@ -3,7 +3,7 @@ use crate::models::{Txn, TxnKind, WishItem};
 use chrono::{Datelike, NaiveDate};
 
 pub const COMPARE_COLORS: [&str; 6] =
-    ["#9274b1", "#4c87bf", "#f8622f", "#872020", "#72462f", "#1d5d3f"];
+    ["#984800", "#2f6b3c", "#0b57d0", "#a63c66", "#6d5a00", "#4c4aa8"];
 
 const FONT: &str = "'Baloo 2','PingFang SC','Microsoft YaHei',sans-serif";
 
@@ -45,7 +45,7 @@ pub fn compare_chart_svg(balance: i64, wishes: &[WishItem]) -> String {
     let mut rows = vec![Row {
         label: "💰 当前积分".into(),
         value: balance,
-        color: "#ecc22e",
+        color: "var(--primary)",
     }];
     for (i, w) in wishes.iter().enumerate() {
         rows.push(Row {
@@ -68,11 +68,11 @@ pub fn compare_chart_svg(balance: i64, wishes: &[WishItem]) -> String {
         let x = LEFT + bar_max_w * t as f64 / 4.0;
         let v = (max_v * t as f64 / 4.0).round() as i64;
         s.push_str(&format!(
-            r##"<line x1="{x:.1}" y1="4" x2="{x:.1}" y2="{y2:.1}" stroke="#e8e0cd" stroke-dasharray="4 4"/>"##,
+            r##"<line x1="{x:.1}" y1="4" x2="{x:.1}" y2="{y2:.1}" stroke="var(--outline-variant)" stroke-dasharray="4 4"/>"##,
             y2 = height - 20.0
         ));
         s.push_str(&format!(
-            r##"<text x="{x:.1}" y="{y:.1}" text-anchor="middle" font-size="12" fill="#1d5d3f">{v}</text>"##,
+            r##"<text x="{x:.1}" y="{y:.1}" text-anchor="middle" font-size="12" fill="var(--on-surface-variant)">{v}</text>"##,
             y = height - 4.0
         ));
     }
@@ -81,7 +81,7 @@ pub fn compare_chart_svg(balance: i64, wishes: &[WishItem]) -> String {
         let w = row.value as f64 / max_v * bar_max_w;
         let label = escape_xml(&row.label);
         s.push_str(&format!(
-            r##"<text x="132" y="{y:.1}" text-anchor="end" font-size="12" font-weight="700" fill="#1d5d3f">{label}</text>"##,
+            r##"<text x="132" y="{y:.1}" text-anchor="end" font-size="12" font-weight="700" fill="var(--on-surface-variant)">{label}</text>"##,
             y = y + 17.0
         ));
         if row.value > 0 {
@@ -93,7 +93,7 @@ pub fn compare_chart_svg(balance: i64, wishes: &[WishItem]) -> String {
             ));
         }
         s.push_str(&format!(
-            r##"<text x="{x:.1}" y="{y:.1}" font-size="14" font-weight="800" fill="#1d5d3f">{v}</text>"##,
+            r##"<text x="{x:.1}" y="{y:.1}" font-size="14" font-weight="800" fill="var(--on-surface)">{v}</text>"##,
             x = LEFT + w + 8.0,
             y = y + 18.0,
             v = row.value
@@ -148,11 +148,11 @@ pub fn week_chart_svg(txns: &[Txn], today: NaiveDate) -> String {
     while t <= tick_max {
         let y = TOP + plot_h - (t as f64 / tick_max as f64) * plot_h;
         s.push_str(&format!(
-            r##"<line x1="{LEFT}" y1="{y:.1}" x2="{x2:.1}" y2="{y:.1}" stroke="#e8e0cd" stroke-dasharray="4 4"/>"##,
+            r##"<line x1="{LEFT}" y1="{y:.1}" x2="{x2:.1}" y2="{y:.1}" stroke="var(--outline-variant)" stroke-dasharray="4 4"/>"##,
             x2 = W - 8.0
         ));
         s.push_str(&format!(
-            r##"<text x="{x:.1}" y="{yt:.1}" text-anchor="end" font-size="12" fill="#1d5d3f">{t}</text>"##,
+            r##"<text x="{x:.1}" y="{yt:.1}" text-anchor="end" font-size="12" fill="var(--on-surface-variant)">{t}</text>"##,
             x = LEFT - 8.0,
             yt = y + 4.0
         ));
@@ -161,8 +161,8 @@ pub fn week_chart_svg(txns: &[Txn], today: NaiveDate) -> String {
     for (i, (date, label, earn, spend)) in data.iter().enumerate() {
         let gx = LEFT + group_w * i as f64 + (group_w - 40.0) / 2.0;
         for (j, v, color, kind_label) in [
-            (0.0, *earn, "#1d5d3f", "赚得"),
-            (1.0, *spend, "#f8622f", "花掉"),
+            (0.0, *earn, "var(--earn)", "赚得"),
+            (1.0, *spend, "var(--primary)", "花掉"),
         ] {
             if v > 0 {
                 let h = v as f64 / tick_max as f64 * plot_h;
@@ -173,7 +173,7 @@ pub fn week_chart_svg(txns: &[Txn], today: NaiveDate) -> String {
             }
         }
         s.push_str(&format!(
-            r##"<text x="{x:.1}" y="{y:.1}" text-anchor="middle" font-size="12" font-weight="700" fill="#1d5d3f">{label}</text>"##,
+            r##"<text x="{x:.1}" y="{y:.1}" text-anchor="middle" font-size="12" font-weight="700" fill="var(--on-surface-variant)">{label}</text>"##,
             x = gx + 20.0,
             y = H - 6.0
         ));
@@ -207,8 +207,8 @@ mod tests {
         assert!(!svg.contains("动画<片>"));
         // 高度 = max(220, 3*52)
         assert!(svg.contains("viewBox=\"0 0 600 220\""));
-        // 余额条用金色
-        assert!(svg.contains("fill=\"#ecc22e\""));
+        // 余额条用主题色
+        assert!(svg.contains("fill=\"var(--primary)\""));
     }
 
     #[test]
@@ -225,8 +225,8 @@ mod tests {
         assert!(svg.contains(">10/2</text>"));
         // 仅 2 天有交易 → 恰好 2 根柱子
         assert_eq!(svg.matches("<path").count(), 2);
-        assert!(svg.contains("fill=\"#1d5d3f\""));
-        assert!(svg.contains("fill=\"#f8622f\""));
+        assert!(svg.contains("fill=\"var(--earn)\""));
+        assert!(svg.contains("fill=\"var(--primary)\""));
     }
 
     #[test]
