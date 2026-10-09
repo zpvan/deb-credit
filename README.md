@@ -1,6 +1,8 @@
-# Kids Credit Station · 宝贝积分站
+# Kids Credit Station
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+**English** | [简体中文](README.zh-CN.md)
 
 A kid-friendly credit & reward tracker: children check in daily tasks to earn
 credits, then redeem them for wishes. A single-page app that runs entirely in
