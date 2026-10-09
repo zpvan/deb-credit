@@ -279,19 +279,19 @@ pub fn App() -> impl IntoView {
                         view! {
                             <Tabs default_value="today">
                                 <TabsList class="grid h-auto w-full grid-cols-5 rounded-full bg-surface-container-low p-1.5">
-                                    <TabsTrigger value="today" class="rounded-full py-2 font-display font-bold text-on-surface-variant" active_class="bg-primary text-on-primary shadow-elevation-1">
+                                    <TabsTrigger value="today" class="rounded-full py-2 font-display font-bold" active_class="bg-primary text-on-primary shadow-elevation-1">
                                         <Icon name="calendar-check" class="mr-1.5 h-4 w-4" />"打卡
                                     "</TabsTrigger>
-                                    <TabsTrigger value="wishes" class="rounded-full py-2 font-display font-bold text-on-surface-variant" active_class="bg-primary text-on-primary shadow-elevation-1">
+                                    <TabsTrigger value="wishes" class="rounded-full py-2 font-display font-bold" active_class="bg-primary text-on-primary shadow-elevation-1">
                                         <Icon name="gift" class="mr-1.5 h-4 w-4" />"心愿
                                     "</TabsTrigger>
-                                    <TabsTrigger value="calendar" class="rounded-full py-2 font-display font-bold text-on-surface-variant" active_class="bg-primary text-on-primary shadow-elevation-1">
+                                    <TabsTrigger value="calendar" class="rounded-full py-2 font-display font-bold" active_class="bg-primary text-on-primary shadow-elevation-1">
                                         <Icon name="calendar-days" class="mr-1.5 h-4 w-4" />"日历
                                     "</TabsTrigger>
-                                    <TabsTrigger value="charts" class="rounded-full py-2 font-display font-bold text-on-surface-variant" active_class="bg-primary text-on-primary shadow-elevation-1">
+                                    <TabsTrigger value="charts" class="rounded-full py-2 font-display font-bold" active_class="bg-primary text-on-primary shadow-elevation-1">
                                         <Icon name="bar-chart-3" class="mr-1.5 h-4 w-4" />"图表
                                     "</TabsTrigger>
-                                    <TabsTrigger value="history" class="rounded-full py-2 font-display font-bold text-on-surface-variant" active_class="bg-primary text-on-primary shadow-elevation-1">
+                                    <TabsTrigger value="history" class="rounded-full py-2 font-display font-bold" active_class="bg-primary text-on-primary shadow-elevation-1">
                                         <Icon name="scroll-text" class="mr-1.5 h-4 w-4" />"记录
                                     "</TabsTrigger>
                                 </TabsList>

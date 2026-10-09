@@ -27,3 +27,4 @@ Thumbs.db
 
 # tailwind 编译产物（源文件在 style/main.css）
 public/main.css
+.playwright-mcp/
