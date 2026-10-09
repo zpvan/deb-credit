@@ -1,3 +1,25 @@
+# Rust 构建产物
 /target
+
+# Trunk 构建产物
 /dist
+
+# Node（仅用于 tailwindcss 构建工具）
 /node_modules
+/package.json
+/package-lock.json
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 编辑器
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 日志与环境
+*.log
+.env
+.env.*
