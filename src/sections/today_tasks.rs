@@ -39,14 +39,14 @@ pub fn TodayTasks() -> impl IntoView {
                     <p class="text-sm text-muted-foreground">
                         "已完成 " {move || done_count.get()} "/" {move || credits.tasks.get().len()}
                         " 项，今天赚到 "
-                        <span class="font-display font-bold text-[#f8622f]">
+                        <span class="font-display font-bold text-primary">
                             "+" {move || earned_today.get()}
                         </span>
                         " 积分"
                     </p>
                 </div>
                 <button
-                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all h-9 px-4 py-2 rounded-full bg-[#1d5d3f] hover:bg-[#164a32] text-white font-display"
+                    class="m3-btn-filled"
                     on:click=move |_| {
                         editing.set(None);
                         dialog_open.set(true);
@@ -70,11 +70,11 @@ pub fn TodayTasks() -> impl IntoView {
                             <div class=move || {
                                 let done = credits.is_task_done(id);
                                 format!(
-                                    "group relative flex items-center gap-3 rounded-3xl border-2 p-4 transition-all duration-300 {} {}",
+                                    "group relative flex items-center gap-3 p-4 transition-all duration-300 {} {}",
                                     if done {
-                                        "border-[#1d5d3f]/20 bg-[#1d5d3f] text-white shadow-md"
+                                        "rounded-2xl bg-earn text-on-earn shadow-elevation-1"
                                     } else {
-                                        "border-border bg-card hover:border-[#ecc22e] hover:shadow-sm"
+                                        "m3-card hover:shadow-elevation-2"
                                     },
                                     if just_done.get() == Some(id) { "animate-pop-in" } else { "" }
                                 )
@@ -95,7 +95,7 @@ pub fn TodayTasks() -> impl IntoView {
                                 >
                                     <span class=move || format!(
                                         "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-2xl {}",
-                                        if credits.is_task_done(id) { "bg-white/15" } else { "bg-[#feffc9]" }
+                                        if credits.is_task_done(id) { "bg-on-earn/15" } else { "bg-secondary-container" }
                                     )>
                                         {icon.clone()}
                                     </span>
@@ -108,7 +108,7 @@ pub fn TodayTasks() -> impl IntoView {
                                         </span>
                                         <span class=move || format!(
                                             "font-display text-sm font-semibold {}",
-                                            if credits.is_task_done(id) { "text-[#ecc22e]" } else { "text-[#f8622f]" }
+                                            if credits.is_task_done(id) { "text-on-earn/80" } else { "text-primary" }
                                         )>
                                             "+" {credit} " 积分"
                                         </span>
@@ -116,9 +116,9 @@ pub fn TodayTasks() -> impl IntoView {
                                     <span class=move || format!(
                                         "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-all {}",
                                         if credits.is_task_done(id) {
-                                            "border-[#ecc22e] bg-[#ecc22e] text-[#1d5d3f]"
+                                            "border-transparent bg-on-earn text-earn"
                                         } else {
-                                            "border-muted-foreground/30 text-transparent"
+                                            "border-outline/50 text-transparent"
                                         }
                                     )>
                                         <Icon name="check" class="h-5 w-5" stroke_width=3.5 />
@@ -126,7 +126,7 @@ pub fn TodayTasks() -> impl IntoView {
                                 </button>
                                 <div class="absolute -top-2 right-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                                     <button
-                                        class="flex h-7 w-7 items-center justify-center rounded-full bg-white text-[#4c87bf] shadow hover:scale-110"
+                                        class="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-lowest text-primary shadow-elevation-1 hover:scale-110"
                                         aria-label="编辑"
                                         on:click=move |_| {
                                             editing.set(Some(t_edit.clone()));
@@ -136,7 +136,7 @@ pub fn TodayTasks() -> impl IntoView {
                                         <Icon name="pencil" class="h-3.5 w-3.5" />
                                     </button>
                                     <button
-                                        class="flex h-7 w-7 items-center justify-center rounded-full bg-white text-[#872020] shadow hover:scale-110"
+                                        class="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-lowest text-error shadow-elevation-1 hover:scale-110"
                                         aria-label="删除"
                                         on:click=move |_| credits.remove_task(id)
                                     >
