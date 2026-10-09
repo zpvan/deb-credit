@@ -3,6 +3,7 @@ pub mod charts_svg;
 pub mod components;
 pub mod credits;
 pub mod date;
+pub mod i18n;
 pub mod icons;
 pub mod models;
 pub mod persist;
