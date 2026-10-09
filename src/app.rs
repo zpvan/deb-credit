@@ -29,6 +29,27 @@ pub fn App() -> impl IntoView {
     let import_success = RwSignal::new(None::<i64>);
     let file_ref = NodeRef::<leptos::html::Input>::new();
 
+    let dark_mode = RwSignal::new(
+        document()
+            .document_element()
+            .map(|el| el.class_list().contains("dark"))
+            .unwrap_or(false),
+    );
+    Effect::new(move |_| {
+        let d = dark_mode.get();
+        if let Some(el) = document().document_element() {
+            let cl = el.class_list();
+            if d {
+                let _ = cl.add_1("dark");
+            } else {
+                let _ = cl.remove_1("dark");
+            }
+        }
+        if let Some(storage) = window().local_storage().ok().flatten() {
+            let _ = storage.set_item("theme", if d { "dark" } else { "light" });
+        }
+    });
+
     let date_line = format!("{} · {}", today_str(), header_date_label(Local::now().date_naive()));
 
     let kid_initial = Signal::derive(move || {
@@ -75,6 +96,17 @@ pub fn App() -> impl IntoView {
                         <h1 class="font-display text-4xl font-extrabold tracking-tight">"宝贝积分站"</h1>
                     </div>
                     <div class="flex items-center gap-2">
+                        <button
+                            class="m3-icon-btn"
+                            title="切换深色模式"
+                            on:click=move |_| dark_mode.update(|v| *v = !*v)
+                        >
+                            {move || if dark_mode.get() {
+                                view! { <Icon name="sun" class="h-5 w-5" /> }.into_any()
+                            } else {
+                                view! { <Icon name="moon" class="h-5 w-5" /> }.into_any()
+                            }}
+                        </button>
                         <button
                             class=format!("{HEADER_BTN} hover:border-[#4c87bf] hover:text-[#4c87bf]")
                             title="导出全部数据为 JSON 文件"
