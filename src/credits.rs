@@ -76,14 +76,19 @@ impl Credits {
             }
         });
 
-        // auto-select 第一个宝贝
+        // auto-select 第一个宝贝（仅在值真正变化时 set，避免 Effect 自我触发死循环）
         Effect::new(move |_| {
             let kids = store.with(|s| s.kids.clone());
             let sel = selected_kid_id.get();
-            if kids.is_empty() {
-                selected_kid_id.set(None);
-            } else if sel.is_none() || !kids.iter().any(|k| Some(k.id) == sel) {
-                selected_kid_id.set(Some(kids[0].id));
+            let new = if kids.is_empty() {
+                None
+            } else if sel.map_or(true, |id| !kids.iter().any(|k| k.id == id)) {
+                Some(kids[0].id)
+            } else {
+                sel
+            };
+            if new != sel {
+                selected_kid_id.set(new);
             }
         });
 
