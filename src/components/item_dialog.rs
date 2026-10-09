@@ -1,5 +1,6 @@
 use crate::components::dialog::Dialog;
 use crate::components::kid_dialog::{INPUT_CLASS, LABEL_CLASS, SAVE_BTN_CLASS};
+use crate::i18n::{t, use_lang, K};
 use leptos::prelude::*;
 
 pub const TASK_ICONS: &[&str] = &[
@@ -24,6 +25,7 @@ pub fn ItemDialog(
     let name = RwSignal::new(String::new());
     let value = RwSignal::new("1".to_string());
     let icon = RwSignal::new(icons[0].to_string());
+    let lang = use_lang();
 
     Effect::new(move |_| {
         if open.get() {
@@ -47,10 +49,10 @@ pub fn ItemDialog(
             <h2 class="text-lg leading-none font-semibold font-display text-xl">{move || title.get()}</h2>
             <div class="space-y-4 py-2">
                 <div class="space-y-2">
-                    <label class=LABEL_CLASS>"名称"</label>
+                    <label class=LABEL_CLASS>{move || t(lang.get(), K::FieldName)}</label>
                     <input
                         class=INPUT_CLASS
-                        placeholder="例如：自己收拾玩具"
+                        placeholder=move || t(lang.get(), K::ItemNamePlaceholder)
                         maxlength="20"
                         bind:value=name
                     />
@@ -60,7 +62,7 @@ pub fn ItemDialog(
                     <input class=INPUT_CLASS type="number" min="1" bind:value=value />
                 </div>
                 <div class="space-y-2">
-                    <label class=LABEL_CLASS>"选一个图标"</label>
+                    <label class=LABEL_CLASS>{move || t(lang.get(), K::PickIcon)}</label>
                     <div class="grid grid-cols-8 gap-1.5">
                         {icons
                             .iter()
@@ -99,7 +101,7 @@ pub fn ItemDialog(
                         open.set(false);
                     }
                 >
-                    保存
+                    {move || t(lang.get(), K::Save)}
                 </button>
             </div>
         </Dialog>

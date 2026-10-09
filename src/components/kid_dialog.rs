@@ -1,4 +1,5 @@
 use crate::components::dialog::Dialog;
+use crate::i18n::{t, use_lang, K};
 use leptos::prelude::*;
 
 pub const KID_AVATARS: &[&str] = &[
@@ -18,6 +19,7 @@ pub fn KidDialog(
 ) -> impl IntoView {
     let name = RwSignal::new(String::new());
     let avatar = RwSignal::new(KID_AVATARS[0].to_string());
+    let lang = use_lang();
 
     Effect::new(move |_| {
         if open.get() {
@@ -35,7 +37,7 @@ pub fn KidDialog(
     });
 
     let title = move || {
-        if initial.get().is_some() { "编辑宝贝" } else { "添加宝贝" }
+        if initial.get().is_some() { t(lang.get(), K::EditKid) } else { t(lang.get(), K::AddKid) }
     };
 
     view! {
@@ -43,16 +45,16 @@ pub fn KidDialog(
             <h2 class="text-lg leading-none font-semibold font-display text-xl">{title}</h2>
             <div class="space-y-4 py-2">
                 <div class="space-y-2">
-                    <label class=LABEL_CLASS>"名字"</label>
+                    <label class=LABEL_CLASS>{move || t(lang.get(), K::FieldName)}</label>
                     <input
                         class=INPUT_CLASS
-                        placeholder="例如：小宝"
+                        placeholder=move || t(lang.get(), K::KidNamePlaceholder)
                         maxlength="12"
                         bind:value=name
                     />
                 </div>
                 <div class="space-y-2">
-                    <label class=LABEL_CLASS>"选一个头像"</label>
+                    <label class=LABEL_CLASS>{move || t(lang.get(), K::PickAvatar)}</label>
                     <div class="grid grid-cols-6 gap-1.5">
                         {KID_AVATARS
                             .iter()
@@ -85,7 +87,7 @@ pub fn KidDialog(
                         open.set(false);
                     }
                 >
-                    保存
+                    {move || t(lang.get(), K::Save)}
                 </button>
             </div>
         </Dialog>
