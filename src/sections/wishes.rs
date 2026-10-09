@@ -6,8 +6,8 @@ use crate::models::WishItem;
 use leptos::prelude::*;
 use std::time::Duration;
 
-const ALERT_CANCEL_CLASS: &str = "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all h-9 px-4 py-2 border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground rounded-full";
-const ALERT_ACTION_CLASS: &str = "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all h-9 px-4 py-2 rounded-full bg-[#f8622f] text-white hover:bg-[#e04f20]";
+const ALERT_CANCEL_CLASS: &str = "m3-btn-outlined";
+const ALERT_ACTION_CLASS: &str = "m3-btn-filled";
 
 #[component]
 pub fn Wishes() -> impl IntoView {
@@ -33,7 +33,7 @@ pub fn Wishes() -> impl IntoView {
                     <p class="text-sm text-muted-foreground">"攒够积分，就可以兑换心愿啦"</p>
                 </div>
                 <button
-                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all h-9 px-4 py-2 rounded-full bg-[#9274b1] hover:bg-[#7a5f97] text-white font-display"
+                    class="m3-btn-filled"
                     on:click=move |_| {
                         editing.set(None);
                         dialog_open.set(true);
@@ -58,18 +58,18 @@ pub fn Wishes() -> impl IntoView {
                             <div class=move || {
                                 let affordable = credits.balance.get() >= cost;
                                 format!(
-                                    "group relative rounded-3xl border-2 bg-card p-4 transition-all {} {}",
-                                    if affordable { "border-[#ecc22e] shadow-sm" } else { "border-border" },
+                                    "group relative p-4 transition-all {} {}",
+                                    if affordable { "m3-card ring-2 ring-primary" } else { "m3-card" },
                                     if celebrate.get() == Some(id) { "animate-wiggle" } else { "" }
                                 )
                             }>
                                 <div class="flex items-center gap-3">
-                                    <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#f3ecfa] text-2xl">
+                                    <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-secondary-container text-2xl">
                                         {icon.clone()}
                                     </span>
                                     <div class="flex-1">
                                         <div class="font-display text-lg font-bold leading-tight">{name.clone()}</div>
-                                        <div class="font-display text-sm font-semibold text-[#9274b1]">
+                                        <div class="font-display text-sm font-semibold text-on-surface-variant">
                                             "需要 " {cost} " 积分"
                                         </div>
                                     </div>
@@ -77,11 +77,11 @@ pub fn Wishes() -> impl IntoView {
                                         class=move || {
                                             let affordable = credits.balance.get() >= cost;
                                             format!(
-                                                "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all h-8 rounded-md gap-1.5 px-3 rounded-full font-display {}",
+                                                "inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-4 font-display text-sm font-bold transition-all {}",
                                                 if affordable {
-                                                    "bg-[#f8622f] text-white hover:bg-[#e04f20]"
+                                                    "bg-primary text-on-primary shadow-elevation-1 hover:shadow-elevation-2"
                                                 } else {
-                                                    "bg-muted text-muted-foreground"
+                                                    "bg-surface-container-highest text-on-surface-variant"
                                                 }
                                             )
                                         }
@@ -102,11 +102,11 @@ pub fn Wishes() -> impl IntoView {
                                         }}
                                     </button>
                                 </div>
-                                <div class="mt-3 h-2.5 overflow-hidden rounded-full bg-muted">
+                                <div class="mt-3 h-2.5 overflow-hidden rounded-full bg-surface-container-highest">
                                     <div
                                         class=move || format!(
                                             "h-full rounded-full transition-all duration-500 {}",
-                                            if credits.balance.get() >= cost { "bg-[#ecc22e]" } else { "bg-[#9274b1]/60" }
+                                            if credits.balance.get() >= cost { "bg-earn" } else { "bg-primary/50" }
                                         )
                                         style=move || {
                                             let bal = credits.balance.get();
@@ -121,7 +121,7 @@ pub fn Wishes() -> impl IntoView {
                                 </div>
                                 <div class="absolute -top-2 right-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                                     <button
-                                        class="flex h-7 w-7 items-center justify-center rounded-full bg-white text-[#4c87bf] shadow hover:scale-110"
+                                        class="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-lowest text-primary shadow-elevation-1 hover:scale-110"
                                         aria-label="编辑"
                                         on:click=move |_| {
                                             editing.set(Some(w_edit.clone()));
@@ -131,7 +131,7 @@ pub fn Wishes() -> impl IntoView {
                                         <Icon name="pencil" class="h-3.5 w-3.5" />
                                     </button>
                                     <button
-                                        class="flex h-7 w-7 items-center justify-center rounded-full bg-white text-[#872020] shadow hover:scale-110"
+                                        class="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-lowest text-error shadow-elevation-1 hover:scale-110"
                                         aria-label="删除"
                                         on:click=move |_| credits.remove_wish(id)
                                     >
@@ -158,14 +158,14 @@ pub fn Wishes() -> impl IntoView {
                 }
             />
 
-            <Dialog open=confirm_open show_close=false content_class="rounded-3xl">
+            <Dialog open=confirm_open show_close=false>
                 <div class="flex flex-col gap-2 text-center sm:text-left">
                     <h2 class="text-lg font-semibold font-display text-xl">
                         "兑换「" {move || confirming.get().map(|w| w.name).unwrap_or_default()} "」？"
                     </h2>
                     <p class="text-muted-foreground text-sm">
                         "将消耗 "
-                        <span class="font-display font-bold text-[#f8622f]">
+                        <span class="font-display font-bold text-primary">
                             {move || confirming.get().map(|w| w.cost).unwrap_or(0)}
                         </span>
                         " 积分，兑换后剩余 "
