@@ -1,4 +1,5 @@
 use crate::date::{date_label_md, format_date, last_7_days};
+use crate::i18n::{t, K, Lang};
 use crate::models::{Txn, TxnKind, WishItem};
 use chrono::{Datelike, NaiveDate};
 
@@ -36,14 +37,15 @@ fn rounded_top_rect(x: f64, y: f64, w: f64, h: f64, r: f64) -> String {
 }
 
 /// 积分 vs 心愿 横向条形图
-pub fn compare_chart_svg(balance: i64, wishes: &[WishItem]) -> String {
+pub fn compare_chart_svg(balance: i64, wishes: &[WishItem], lang: Lang) -> String {
+    let unit = t(lang, K::CreditsUnit);
     struct Row {
         label: String,
         value: i64,
         color: &'static str,
     }
     let mut rows = vec![Row {
-        label: "💰 当前积分".into(),
+        label: t(lang, K::SvgCurrentCredits).into(),
         value: balance,
         color: "var(--primary)",
     }];
@@ -86,7 +88,7 @@ pub fn compare_chart_svg(balance: i64, wishes: &[WishItem]) -> String {
         ));
         if row.value > 0 {
             s.push_str(&format!(
-                r##"<path d="{d}" fill="{color}"><title>{label}: {v} 积分</title></path>"##,
+                r##"<path d="{d}" fill="{color}"><title>{label}: {v} {unit}</title></path>"##,
                 d = rounded_right_rect(LEFT, y, w.max(2.0), 26.0, 13.0),
                 color = row.color,
                 v = row.value
@@ -104,12 +106,12 @@ pub fn compare_chart_svg(balance: i64, wishes: &[WishItem]) -> String {
 }
 
 /// 最近 7 天收支 分组柱状图
-pub fn week_chart_svg(txns: &[Txn], today: NaiveDate) -> String {
+pub fn week_chart_svg(txns: &[Txn], today: NaiveDate, lang: Lang) -> String {
     let days = last_7_days(today);
     let mut data: Vec<(String, String, i64, i64)> = Vec::new(); // (date, label, earn, spend)
     for (i, d) in days.iter().enumerate() {
         let date = format_date(d.year(), d.month(), d.day());
-        let label = if i == 6 { "今天".into() } else { date_label_md(*d) };
+        let label = if i == 6 { t(lang, K::Today).into() } else { date_label_md(*d) };
         let (mut earn, mut spend) = (0i64, 0i64);
         for t in txns.iter().filter(|t| t.date == date) {
             match t.kind {
@@ -144,25 +146,25 @@ pub fn week_chart_svg(txns: &[Txn], today: NaiveDate) -> String {
         r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 256" width="100%" font-family="{FONT}">"##
     );
     // 横向虚线网格 + Y 刻度
-    let mut t = 0;
-    while t <= tick_max {
-        let y = TOP + plot_h - (t as f64 / tick_max as f64) * plot_h;
+    let mut tick = 0;
+    while tick <= tick_max {
+        let y = TOP + plot_h - (tick as f64 / tick_max as f64) * plot_h;
         s.push_str(&format!(
             r##"<line x1="{LEFT}" y1="{y:.1}" x2="{x2:.1}" y2="{y:.1}" stroke="var(--outline-variant)" stroke-dasharray="4 4"/>"##,
             x2 = W - 8.0
         ));
         s.push_str(&format!(
-            r##"<text x="{x:.1}" y="{yt:.1}" text-anchor="end" font-size="12" fill="var(--on-surface-variant)">{t}</text>"##,
+            r##"<text x="{x:.1}" y="{yt:.1}" text-anchor="end" font-size="12" fill="var(--on-surface-variant)">{tick}</text>"##,
             x = LEFT - 8.0,
             yt = y + 4.0
         ));
-        t += tick_step;
+        tick += tick_step;
     }
     for (i, (date, label, earn, spend)) in data.iter().enumerate() {
         let gx = LEFT + group_w * i as f64 + (group_w - 40.0) / 2.0;
         for (j, v, color, kind_label) in [
-            (0.0, *earn, "var(--earn)", "赚得"),
-            (1.0, *spend, "var(--primary)", "花掉"),
+            (0.0, *earn, "var(--earn)", t(lang, K::SvgEarned)),
+            (1.0, *spend, "var(--primary)", t(lang, K::SvgSpent)),
         ] {
             if v > 0 {
                 let h = v as f64 / tick_max as f64 * plot_h;
@@ -185,6 +187,7 @@ pub fn week_chart_svg(txns: &[Txn], today: NaiveDate) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::i18n::Lang;
     use crate::models::{Txn, TxnKind, WishItem};
 
     #[test]
@@ -198,7 +201,7 @@ mod tests {
             WishItem { id: 1, kid_id: 1, name: "冰淇淋".into(), cost: 10, icon: "🍦".into() },
             WishItem { id: 2, kid_id: 1, name: "动画<片>".into(), cost: 8, icon: "📺".into() },
         ];
-        let svg = compare_chart_svg(5, &wishes);
+        let svg = compare_chart_svg(5, &wishes, Lang::Zh);
         // 3 行：余额 + 2 心愿 → 3 个名称 label
         assert_eq!(svg.matches("text-anchor=\"end\"").count(), 3);
         assert!(svg.contains("💰 当前积分"));
@@ -220,7 +223,7 @@ mod tests {
             Txn { id: 2, kid_id: 1, kind: TxnKind::Spend, name: "b".into(), amount: 2,
                   date: "2026-10-07".into(), check_key: None, created_at: "x".into() },
         ];
-        let svg = week_chart_svg(&txns, today);
+        let svg = week_chart_svg(&txns, today, Lang::Zh);
         assert!(svg.contains(">今天</text>"));
         assert!(svg.contains(">10/2</text>"));
         // 仅 2 天有交易 → 恰好 2 根柱子
@@ -232,8 +235,22 @@ mod tests {
     #[test]
     fn week_chart_no_txns_still_renders_grid() {
         let today = chrono::NaiveDate::from_ymd_opt(2026, 10, 8).unwrap();
-        let svg = week_chart_svg(&[], today);
+        let svg = week_chart_svg(&[], today, Lang::Zh);
         assert!(svg.contains("stroke-dasharray=\"4 4\""));
         assert_eq!(svg.matches("<path").count(), 0);
+    }
+
+    #[test]
+    fn compare_chart_en_labels() {
+        let svg = compare_chart_svg(5, &[], Lang::En);
+        assert!(svg.contains("💰 Current credits"));
+        assert!(svg.contains("5 credits"));
+    }
+
+    #[test]
+    fn week_chart_en_today_label() {
+        let today = chrono::NaiveDate::from_ymd_opt(2026, 10, 8).unwrap();
+        let svg = week_chart_svg(&[], today, Lang::En);
+        assert!(svg.contains(">Today</text>"));
     }
 }

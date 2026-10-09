@@ -38,8 +38,6 @@ pub fn month_cells(year: i32, month: u32) -> Vec<Option<u32>> {
     cells
 }
 
-pub const WEEKDAYS_CN: [&str; 7] = ["一", "二", "三", "四", "五", "六", "日"];
-
 /// "10/2"
 pub fn date_label_md(d: NaiveDate) -> String {
     format!("{}/{}", d.month(), d.day())

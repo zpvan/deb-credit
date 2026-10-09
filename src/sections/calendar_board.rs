@@ -1,5 +1,6 @@
 use crate::credits::Credits;
-use crate::date::{format_date, month_cells, today_str, WEEKDAYS_CN};
+use crate::date::{format_date, month_cells, today_str};
+use crate::i18n::{checks_label, t, use_lang, K};
 use crate::icons::Icon;
 use crate::models::TxnKind;
 use chrono::{Datelike, Local};
@@ -16,6 +17,7 @@ struct DayStat {
 #[component]
 pub fn CalendarBoard() -> impl IntoView {
     let credits = use_context::<Credits>().expect("Credits context");
+    let lang = use_lang();
     let now = Local::now().date_naive();
     let view_year = RwSignal::new(now.year());
     let view_month = RwSignal::new(now.month());
@@ -56,11 +58,11 @@ pub fn CalendarBoard() -> impl IntoView {
         <section class="space-y-6">
             <div class="m3-card p-5">
                 <div class="mb-4 flex items-center justify-between">
-                    <h2 class="font-display text-2xl font-bold">"日历看板"</h2>
+                    <h2 class="font-display text-2xl font-bold">{move || t(lang.get(), K::CalendarTitle)}</h2>
                     <div class="flex items-center gap-1">
                         <button
                             class="m3-icon-btn h-9 w-9"
-                            aria-label="上个月"
+                            aria-label=move || t(lang.get(), K::PrevMonth)
                             on:click=move |_| {
                                 if view_month.get() == 1 {
                                     view_year.update(|y| *y -= 1);
@@ -73,11 +75,11 @@ pub fn CalendarBoard() -> impl IntoView {
                             <Icon name="chevron-left" class="h-5 w-5" />
                         </button>
                         <span class="w-28 text-center font-display text-lg font-extrabold">
-                            {move || format!("{}年{}月", view_year.get(), view_month.get())}
+                            {move || crate::date::month_title(lang.get(), view_year.get(), view_month.get())}
                         </span>
                         <button
                             class="m3-icon-btn h-9 w-9"
-                            aria-label="下个月"
+                            aria-label=move || t(lang.get(), K::NextMonth)
                             on:click=move |_| {
                                 if view_month.get() == 12 {
                                     view_year.update(|y| *y += 1);
@@ -93,7 +95,7 @@ pub fn CalendarBoard() -> impl IntoView {
                 </div>
 
                 <div class="mb-1 grid grid-cols-7 text-center text-xs font-bold text-on-surface-variant">
-                    {WEEKDAYS_CN
+                    {move || crate::date::weekday_labels(lang.get())
                         .iter()
                         .map(|w| view! { <div class="py-1">{*w}</div> })
                         .collect_view()}
@@ -189,7 +191,7 @@ pub fn CalendarBoard() -> impl IntoView {
                                                             "bg-surface-container-highest text-on-surface-variant"
                                                         }
                                                     )>
-                                                        {if s.checks >= task_count { "全勤".to_string() } else { format!("{}项", s.checks) }}
+                                                        {if s.checks >= task_count { t(lang.get(), K::AllDone).to_string() } else { checks_label(lang.get(), s.checks) }}
                                                     </span>
                                                 })}
                                             </div>
@@ -204,11 +206,11 @@ pub fn CalendarBoard() -> impl IntoView {
 
                 <div class="mt-4 flex flex-wrap items-center gap-4 text-xs text-on-surface-variant">
                     <span class="flex items-center gap-1.5">
-                        <span class="h-3 w-3 rounded bg-earn/25"></span>"绿色深浅 = 赚得多少"
+                        <span class="h-3 w-3 rounded bg-earn/25"></span>{move || t(lang.get(), K::LegendIntensity)}
                     </span>
-                    <span class="font-display font-extrabold text-earn">"+赚得"</span>
-                    <span class="font-display font-extrabold text-primary">"−花掉"</span>
-                    <span class="rounded-full bg-earn px-1.5 font-bold text-on-earn">"全勤"</span>
+                    <span class="font-display font-extrabold text-earn">"+" {move || t(lang.get(), K::EarnedWord)}</span>
+                    <span class="font-display font-extrabold text-primary">"−" {move || t(lang.get(), K::SpentWord)}</span>
+                    <span class="rounded-full bg-earn px-1.5 font-bold text-on-earn">{move || t(lang.get(), K::AllDone)}</span>
                 </div>
             </div>
 
@@ -216,15 +218,15 @@ pub fn CalendarBoard() -> impl IntoView {
                 <h3 class="font-display text-xl font-bold">
                     {move || {
                         let sel = selected.get();
-                        if sel == today_str() { "今天".to_string() } else { sel }
+                        if sel == today_str() { t(lang.get(), K::Today).to_string() } else { sel }
                     }}
-                    " 明细"
+                    {move || t(lang.get(), K::DetailsSuffix)}
                     {move || {
                         let sel = selected.get();
                         stats.get().get(&sel).copied().map(|s| view! {
                             <span class="ml-3 text-sm font-bold text-on-surface-variant">
-                                "赚 " <span class="text-earn">"+" {s.earned}</span>
-                                " · 花 " <span class="text-primary">"−" {s.spent}</span>
+                                {move || t(lang.get(), K::EarnedWord)} " " <span class="text-earn">"+" {s.earned}</span>
+                                " · " {move || t(lang.get(), K::SpentWord)} " " <span class="text-primary">"−" {s.spent}</span>
                             </span>
                         })
                     }}
@@ -233,7 +235,7 @@ pub fn CalendarBoard() -> impl IntoView {
                     let list = selected_txns.get();
                     if list.is_empty() {
                         view! {
-                            <p class="mt-3 text-sm text-on-surface-variant">"这一天没有记录"</p>
+                            <p class="mt-3 text-sm text-on-surface-variant">{move || t(lang.get(), K::NoRecords)}</p>
                         }.into_any()
                     } else {
                         view! {

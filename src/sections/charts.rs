@@ -1,26 +1,28 @@
 use crate::charts_svg::{compare_chart_svg, week_chart_svg};
 use crate::credits::Credits;
+use crate::i18n::{t, use_lang, K};
 use chrono::Local;
 use leptos::prelude::*;
 
 #[component]
 pub fn Charts() -> impl IntoView {
     let credits = use_context::<Credits>().expect("Credits context");
-    let compare = Memo::new(move |_| compare_chart_svg(credits.balance.get(), &credits.wishes.get()));
-    let week = Memo::new(move |_| week_chart_svg(&credits.txns.get(), Local::now().date_naive()));
+    let lang = use_lang();
+    let compare = Memo::new(move |_| compare_chart_svg(credits.balance.get(), &credits.wishes.get(), lang.get()));
+    let week = Memo::new(move |_| week_chart_svg(&credits.txns.get(), Local::now().date_naive(), lang.get()));
 
     view! {
         <section class="space-y-6">
             <div class="m3-card p-5">
-                <h2 class="font-display text-2xl font-bold">"积分 vs 心愿"</h2>
+                <h2 class="font-display text-2xl font-bold">{move || t(lang.get(), K::ChartsCompareTitle)}</h2>
                 <p class="mb-4 text-sm text-on-surface-variant">
-                    "橙色是当前攒下的积分，彩色是每个心愿需要的积分，一眼看出还差多少"
+                    {move || t(lang.get(), K::ChartsCompareSubtitle)}
                 </p>
                 <div inner_html=move || compare.get()></div>
             </div>
             <div class="m3-card p-5">
-                <h2 class="font-display text-2xl font-bold">"最近 7 天收支"</h2>
-                <p class="mb-4 text-sm text-on-surface-variant">"绿色是每天赚到的积分，橙色是花掉的积分"</p>
+                <h2 class="font-display text-2xl font-bold">{move || t(lang.get(), K::ChartsWeekTitle)}</h2>
+                <p class="mb-4 text-sm text-on-surface-variant">{move || t(lang.get(), K::ChartsWeekSubtitle)}</p>
                 <div inner_html=move || week.get()></div>
             </div>
         </section>

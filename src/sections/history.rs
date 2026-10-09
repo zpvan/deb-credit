@@ -1,10 +1,12 @@
 use crate::credits::Credits;
+use crate::i18n::{t, use_lang, K};
 use crate::models::TxnKind;
 use leptos::prelude::*;
 
 #[component]
 pub fn History() -> impl IntoView {
     let credits = use_context::<Credits>().expect("Credits context");
+    let lang = use_lang();
     let sorted = Memo::new(move |_| {
         let mut v = credits.txns.get();
         v.sort_by(|a, b| b.id.cmp(&a.id));
@@ -18,13 +20,13 @@ pub fn History() -> impl IntoView {
             if list.is_empty() {
                 view! {
                     <section class="rounded-3xl border-2 border-dashed border-outline-variant bg-surface-container-low/50 p-10 text-center text-on-surface-variant">
-                        "还没有记录，去完成今天的任务赚第一笔积分吧！"
+                        {move || t(lang.get(), K::HistoryEmpty)}
                     </section>
                 }.into_any()
             } else {
                 view! {
                     <section>
-                        <h2 class="mb-4 font-display text-2xl font-bold">"积分记录"</h2>
+                        <h2 class="mb-4 font-display text-2xl font-bold">{move || t(lang.get(), K::HistoryTitle)}</h2>
                         <div class="m3-card divide-y divide-outline-variant overflow-hidden">
                             {list.into_iter().map(|t| {
                                 let is_earn = t.kind == TxnKind::Earn;
